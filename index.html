@@ -255,243 +255,106 @@ Masuk dengan Google
 </div>
 
 <script>
-/* ===== Firebase Config ===== */
 var FBC={apiKey:"AIzaSyBAAqRc86lTdgeNcyi8y38iPM_kQ2MlV8I",authDomain:"smart-ai-afc4a.firebaseapp.com",databaseURL:"https://smart-ai-afc4a-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"smart-ai-afc4a",storageBucket:"smart-ai-afc4a.firebasestorage.app",messagingSenderId:"201179853408",appId:"1:201179853408:web:e41e86793d1ca73a198905",measurementId:"G-16QQW7CB16"};
 
-/* ===== DATA MATERI ===== */
+/* ===== DATA DANA — Sudah diupdate ===== */
+var DANA_NUM='081321592990';
+var DANA_NM='Yanuar Hidayat';
+
 var MAT={
-SD:[
-{id:'hiragana',title:'Hiragana',desc:'Huruf dasar bahasa Jepang',icon:'⬛',bg:'linear-gradient(135deg,#ff6b6b,#ee5a24)',c:{chars:[['あ','a'],['い','i'],['う','u'],['え','e'],['お','o'],['か','ka'],['き','ki'],['く','ku'],['け','ke'],['こ','ko'],['さ','sa'],['し','shi'],['す','su'],['せ','se'],['そ','so'],['た','ta'],['ち','chi'],['つ','tsu'],['て','te'],['と','to'],['な','na'],['に','ni'],['ぬ','nu'],['ね','ne'],['の','no'],['は','ha'],['ひ','hi'],['ふ','fu'],['へ','he'],['ほ','ho'],['ま','ma'],['み','mi'],['む','mu'],['め','me'],['も','mo'],['や','ya'],['ゆ','yu'],['よ','yo'],['ら','ra'],['り','ri'],['る','ru'],['れ','re'],['ろ','ro'],['わ','wa'],['を','wo'],['ん','n']],ex:[{jp:'あさごはん',ro:'asagohan',id:'Sarapan'},{jp:'こんにちは',ro:'konnichiwa',id:'Selamat siang'},{jp:'ありがとう',ro:'arigatou',id:'Terima kasih'}]}},
-{id:'katakana',title:'Katakana',desc:'Huruf untuk kata serapan asing',icon:'🔶',bg:'linear-gradient(135deg,#00d4ff,#0984e3)',c:{chars:[['ア','a'],['イ','i'],['ウ','u'],['エ','e'],['オ','o'],['カ','ka'],['キ','ki'],['ク','ku'],['ケ','ke'],['コ','ko'],['サ','sa'],['シ','shi'],['ス','su'],['セ','se'],['ソ','so'],['タ','ta'],['チ','chi'],['ツ','tsu'],['テ','te'],['ト','to'],['ナ','na'],['ニ','ni'],['ヌ','nu'],['ネ','ne'],['ノ','no'],['ハ','ha'],['ヒ','hi'],['フ','fu'],['ヘ','he'],['ホ','ho'],['マ','ma'],['ミ','mi'],['ム','mu'],['メ','me'],['モ','mo'],['ヤ','ya'],['ユ','yu'],['ヨ','yo'],['ラ','ra'],['リ','ri'],['ル','ru'],['レ','re'],['ロ','ro'],['ワ','wa'],['ヲ','wo'],['ン','n']],ex:[{jp:'テレビ',ro:'terebi',id:'Televisi'},{jp:'パソコン',ro:'pasokon',id:'Komputer'},{jp:'スマホ',ro:'sumaho',id:'Smartphone'}]}},
-{id:'kosakata',title:'Kosakata Dasar',desc:'Kata-kata penting sehari-hari',icon:'📝',bg:'linear-gradient(135deg,#a855f7,#7c3aed)',c:{words:[{jp:'水',ro:'mizu',id:'Air'},{jp:'食べる',ro:'taberu',id:'Makan'},{jp:'飲む',ro:'nomu',id:'Minum'},{jp:'本',ro:'hon',id:'Buku'},{jp:'学校',ro:'gakkou',id:'Sekolah'},{jp:'先生',ro:'sensei',id:'Guru'},{jp:'友達',ro:'tomodachi',id:'Teman'},{jp:'大好き',ro:'daisuki',id:'Suka sekali'},{jp:'家族',ro:'kazoku',id:'Keluarga'},{jp:'犬',ro:'inu',id:'Anjing'},{jp:'猫',ro:'neko',id:'Kucing'},{jp:'天気',ro:'tenki',id:'Cuaca'}]}},
-{id:'salam',title:'Salam Jepang',desc:'Percakapan sederhana sehari-hari',icon:'🙇',bg:'linear-gradient(135deg,#06ffd0,#00b894)',c:{greet:[{jp:'おはようございます',ro:'ohayou gozaimasu',id:'Selamat pagi (formal)'},{jp:'こんにちは',ro:'konnichiwa',id:'Selamat siang'},{jp:'こんばんは',ro:'konbanwa',id:'Selamat malam'},{jp:'さようなら',ro:'sayounara',id:'Selamat tinggal'},{jp:'ありがとうございます',ro:'arigatou gozaimasu',id:'Terima kasih (formal)'},{jp:'すみません',ro:'sumimasen',id:'Permisi / Maaf'},{jp:'はじめまして',ro:'hajimemashite',id:'Senang berkenalan'},{jp:'おやすみなさい',ro:'oyasuminasai',id:'Selamat tidur'}]}}
-],
-SMP:[
-{id:'partikel',title:'Partikel Dasar',desc:'は, の, を, に, で, と',icon:'📌',bg:'linear-gradient(135deg,#ff6b6b,#ee5a24)',c:{particles:[{p:'は (wa)',fn:'Menandai topik kalimat',ex:'私は学生です。= Saya adalah murid.'},{p:'の (no)',fn:'Menunjukkan kepemilikan',ex:'私の本 = Buku saya'},{p:'を (wo)',fn:'Menandai objek langsung',ex:'パンを食べます。= Makan roti.'},{p:'に (ni)',fn:'Menunjukkan arah/waktu',ex:'学校に行きます。= Pergi ke sekolah.'},{p:'で (de)',fn:'Menunjukkan alat/tempat aksi',ex:'ペンで書きます。= Menulis dengan pulpen.'},{p:'と (to)',fn:'Dan / bersama',ex:'友達と遊びます。= Bermain dengan teman.'}]}},
-{id:'kalimat',title:'Kalimat Sederhana',desc:'Pola kalimat dasar Jepang',icon:'💬',bg:'linear-gradient(135deg,#00d4ff,#0984e3)',c:{patterns:[{t:'A は B です',d:'A adalah B',ex:'私は日本人です。= Saya orang Jepang.'},{t:'A は B じゃありません',d:'A bukan B',ex:'私は先生じゃありません。= Saya bukan guru.'},{t:'A は B ですか',d:'Apakah A adalah B?',ex:'学生ですか。= Apakah kamu murid?'},{t:'Noun を Verb-masu',d:'Objek + kata kerja',ex:'本を読みます。= Membaca buku.'},{t:'時間に Verb-masu',d:'Waktu + kata kerja',ex:'7時に起きます。= Bangun jam 7.'}]}},
-{id:'kanji_sd',title:'Kanji Dasar',desc:'Kanji level dasar JLPT N5',icon:'漢',bg:'linear-gradient(135deg,#a855f7,#7c3aed)',c:{kanji:[{k:'日',on:'ニチ/ジツ',kun:'ひ/か',mn:'Hari',ex:'日本 = Jepang'},{k:'月',on:'ゲツ/ガツ',kun:'つき',mn:'Bulan',ex:'月曜日 = Hari Senin'},{k:'火',on:'カ',kun:'ひ',mn:'Api',ex:'火曜日 = Hari Selasa'},{k:'水',on:'スイ',kun:'みず',mn:'Air',ex:'水曜日 = Hari Rabu'},{k:'木',on:'モク/ボク',kun:'き',mn:'Pohon',ex:'木曜日 = Hari Kamis'},{k:'金',on:'キン/コン',kun:'かね',mn:'Emas/Uang',ex:'金曜日 = Hari Jumat'},{k:'土',on:'ド/ト',kun:'つち',mn:'Tanah',ex:'土曜日 = Hari Sabtu'},{k:'人',on:'ジン/ニン',kun:'ひと',mn:'Orang',ex:'日本人 = Orang Jepang'},{k:'大',on:'ダイ/タイ',kun:'おお',mn:'Besar',ex:'大学 = Universitas'},{k:'小',on:'ショウ',kun:'ちい',mn:'Kecil',ex:'小学校 = SD'}]}}
-],
-SMA:[
-{id:'teform',title:'Te-Form',desc:'Bentuk dasar untuk pola kalimat',icon:'🔄',bg:'linear-gradient(135deg,#ff6b6b,#ee5a24)',c:{rules:[{r:'Verb u → って',ex:'買う → 買って',mn:'Membeli'},{r:'Verb ku → いて',ex:'書く → 書いて',mn:'Menulis'},{r:'Verb mu → んで',ex:'飲む → 飲んで',mn:'Minum'},{r:'Verb ru → って',ex:'散る → 散って',mn:'Jatuh'},{r:'Verb tsu → って',ex:'待つ → 待って',mn:'Menunggu'},{r:'Verb nu → んで',ex:'死ぬ → 死んで',mn:'Mati'},{r:'Verb bu → んで',ex:'遊ぶ → 遊んで',mn:'Bermain'},{r:'Verb masu → て',ex:'食べます → 食べて',mn:'Makan'},{r:'する → して',ex:'勉強する → 勉強して',mn:'Belajar'},{r:'くる → きて',ex:'来ます → 来て',mn:'Datang'}],use:[{p:'~てください',ex:'ここに座ってください。= Silakan duduk di sini.'},{p:'~ている',ex:'今勉強しています。= Sedang belajar sekarang.'},{p:'~てから',ex:'ご飯を食べてから、勉強します。= Belajar setelah makan.'}]}},
-{id:'past_neg',title:'Past & Negative',desc:'Bentuk lampau dan negatif',icon:'⏪',bg:'linear-gradient(135deg,#00d4ff,#0984e3)',c:{past:[{r:'Noun でした',ex:'学生でした。= (Dulu) adalah murid.'},{r:'Verb-mashita',ex:'本を読みました。= Membaca buku (lampau).'},{r:'い-adj かった',ex:'暑かったです。= (Dulu) panas.'},{r:'な-adj だった',ex:'静かだったです。= (Dulu) tenang.'}],neg:[{r:'Noun じゃありません',ex:'学生じゃありません。= Bukan murid.'},{r:'Verb-masen',ex:'食べません。= Tidak makan.'},{r:'い-adj くない',ex:'高くないです。= Tidak mahal.'},{r:'な-adj じゃない',ex:'簡単じゃないです。= Tidak mudah.'}]}},
-{id:'percakapan',title:'Percakapan Lanjutan',desc:'Dialog situasional',icon:'🗣️',bg:'linear-gradient(135deg,#a855f7,#7c3aed)',c:{dialogs:[{title:'Di Toko',lines:[{jp:'いらっしゃいませ。',id:'Selamat datang.',sp:'Pelayan'},{jp:'この本はいくらですか。',id:'Buku ini berapa?',sp:'Pembeli'},{jp:'千五百円です。',id:'1500 yen.',sp:'Pelayan'},{jp:'じゃあ、これをください。',id:'Saya ambil ini.',sp:'Pembeli'}]},{title:'Di Stasiun',lines:[{jp:'東京行きの電車は何番線ですか。',id:'Kereta ke Tokyo jalur berapa?',sp:'A'},{jp:'3番線です。',id:'Jalur 3.',sp:'B'},{jp:'いつ来ますか。',id:'Kapan datang?',sp:'A'},{jp:'あと5分です。',id:'Lagi 5 menit.',sp:'B'}]}]}},
-{id:'reading',title:'Reading Comprehension',desc:'Latihan membaca teks Jepang',icon:'📖',bg:'linear-gradient(135deg,#06ffd0,#00b894)',c:{texts:[{title:'自己紹介',text:'私の名前は田中です。東京の大学の学生です。専攻は日本語です。趣味は読書と料理です。週末はよく友達と一緒に映画を見に行きます。',reading:'Watashi no namae wa Tanaka desu. Toukyou no daigaku no gakusei desu.',meaning:'Nama saya Tanaka. Saya mahasiswa universitas di Tokyo. Jurusan saya bahasa Jepang. Hobi saya membaca dan memasak. Akhir pekan saya sering pergi nonton film bersama teman.'}]}}
-]};
+SD:[{id:'hiragana',title:'Hiragana',desc:'Huruf dasar bahasa Jepang',icon:'⬛',bg:'linear-gradient(135deg,#ff6b6b,#ee5a24)',c:{chars:[['あ','a'],['い','i'],['う','u'],['え','e'],['お','o'],['か','ka'],['き','ki'],['く','ku'],['け','ke'],['こ','ko'],['さ','sa'],['し','shi'],['す','su'],['せ','se'],['そ','so'],['た','ta'],['ち','chi'],['つ','tsu'],['て','te'],['と','to'],['な','na'],['に','ni'],['ぬ','nu'],['ね','ne'],['の','no'],['は','ha'],['ひ','hi'],['ふ','fu'],['へ','he'],['ほ','ho'],['ま','ma'],['み','mi'],['む','mu'],['め','me'],['も','mo'],['や','ya'],['ゆ','yu'],['よ','yo'],['ら','ra'],['り','ri'],['る','ru'],['れ','re'],['ろ','ro'],['わ','wa'],['を','wo'],['ん','n']],ex:[{jp:'あさごはん',ro:'asagohan',id:'Sarapan'},{jp:'こんにちは',ro:'konnichiwa',id:'Selamat siang'},{jp:'ありがとう',ro:'arigatou',id:'Terima kasih'}]}},{id:'katakana',title:'Katakana',desc:'Huruf untuk kata serapan asing',icon:'🔶',bg:'linear-gradient(135deg,#00d4ff,#0984e3)',c:{chars:[['ア','a'],['イ','i'],['ウ','u'],['エ','e'],['オ','o'],['カ','ka'],['キ','ki'],['ク','ku'],['ケ','ke'],['コ','ko'],['サ','sa'],['シ','shi'],['ス','su'],['セ','se'],['ソ','so'],['タ','ta'],['チ','chi'],['ツ','tsu'],['テ','te'],['ト','to'],['ナ','na'],['ニ','ni'],['ヌ','nu'],['ネ','ne'],['ノ','no'],['ハ','ha'],['ヒ','hi'],['フ','fu'],['ヘ','he'],['ホ','ho'],['マ','ma'],['ミ','mi'],['ム','mu'],['メ','me'],['モ','mo'],['ヤ','ya'],['ユ','yu'],['ヨ','yo'],['ラ','ra'],['リ','ri'],['ル','ru'],['レ','re'],['ロ','ro'],['ワ','wa'],['ヲ','wo'],['ン','n']],ex:[{jp:'テレビ',ro:'terebi',id:'Televisi'},{jp:'パソコン',ro:'pasokon',id:'Komputer'},{jp:'スマホ',ro:'sumaho',id:'Smartphone'}]}},{id:'kosakata',title:'Kosakata Dasar',desc:'Kata-kata penting sehari-hari',icon:'📝',bg:'linear-gradient(135deg,#a855f7,#7c3aed)',c:{words:[{jp:'水',ro:'mizu',id:'Air'},{jp:'食べる',ro:'taberu',id:'Makan'},{jp:'飲む',ro:'nomu',id:'Minum'},{jp:'本',ro:'hon',id:'Buku'},{jp:'学校',ro:'gakkou',id:'Sekolah'},{jp:'先生',ro:'sensei',id:'Guru'},{jp:'友達',ro:'tomodachi',id:'Teman'},{jp:'大好き',ro:'daisuki',id:'Suka sekali'},{jp:'家族',ro:'kazoku',id:'Keluarga'},{jp:'犬',ro:'inu',id:'Anjing'},{jp:'猫',ro:'neko',id:'Kucing'},{jp:'天気',ro:'tenki',id:'Cuaca'}]}},{id:'salam',title:'Salam Jepang',desc:'Percakapan sederhana sehari-hari',icon:'🙇',bg:'linear-gradient(135deg,#06ffd0,#00b894)',c:{greet:[{jp:'おはようございます',ro:'ohayou gozaimasu',id:'Selamat pagi (formal)'},{jp:'こんにちは',ro:'konnichiwa',id:'Selamat siang'},{jp:'こんばんは',ro:'konbanwa',id:'Selamat malam'},{jp:'さようなら',ro:'sayounara',id:'Selamat tinggal'},{jp:'ありがとうございます',ro:'arigatou gozaimasu',id:'Terima kasih (formal)'},{jp:'すみません',ro:'sumimasen',id:'Permisi / Maaf'},{jp:'はじめまして',ro:'hajimemashite',id:'Senang berkenalan'},{jp:'おやすみなさい',ro:'oyasuminasai',id:'Selamat tidur'}]}}],
+SMP:[{id:'partikel',title:'Partikel Dasar',desc:'は, の, を, に, で, と',icon:'📌',bg:'linear-gradient(135deg,#ff6b6b,#ee5a24)',c:{particles:[{p:'は (wa)',fn:'Menandai topik kalimat',ex:'私は学生です。= Saya adalah murid.'},{p:'の (no)',fn:'Menunjukkan kepemilikan',ex:'私の本 = Buku saya'},{p:'を (wo)',fn:'Menandai objek langsung',ex:'パンを食べます。= Makan roti.'},{p:'に (ni)',fn:'Menunjukkan arah/waktu',ex:'学校に行きます。= Pergi ke sekolah.'},{p:'で (de)',fn:'Menunjukkan alat/tempat aksi',ex:'ペンで書きます。= Menulis dengan pulpen.'},{p:'と (to)',fn:'Dan / bersama',ex:'友達と遊びます。= Bermain dengan teman.'}]}},{id:'kalimat',title:'Kalimat Sederhana',desc:'Pola kalimat dasar Jepang',icon:'💬',bg:'linear-gradient(135deg,#00d4ff,#0984e3)',c:{patterns:[{t:'A は B です',d:'A adalah B',ex:'私は日本人です。= Saya orang Jepang.'},{t:'A は B じゃありません',d:'A bukan B',ex:'私は先生じゃありません。= Saya bukan guru.'},{t:'A は B ですか',d:'Apakah A adalah B?',ex:'学生ですか。= Apakah kamu murid?'},{t:'Noun を Verb-masu',d:'Objek + kata kerja',ex:'本を読みます。= Membaca buku.'},{t:'時間に Verb-masu',d:'Waktu + kata kerja',ex:'7時に起きます。= Bangun jam 7.'}]}},{id:'kanji_sd',title:'Kanji Dasar',desc:'Kanji level dasar JLPT N5',icon:'漢',bg:'linear-gradient(135deg,#a855f7,#7c3aed)',c:{kanji:[{k:'日',on:'ニチ/ジツ',kun:'ひ/か',mn:'Hari',ex:'日本 = Jepang'},{k:'月',on:'ゲツ/ガツ',kun:'つき',mn:'Bulan',ex:'月曜日 = Hari Senin'},{k:'火',on:'カ',kun:'ひ',mn:'Api',ex:'火曜日 = Hari Selasa'},{k:'水',on:'スイ',kun:'みず',mn:'Air',ex:'水曜日 = Hari Rabu'},{k:'木',on:'モク/ボク',kun:'き',mn:'Pohon',ex:'木曜日 = Hari Kamis'},{k:'金',on:'キン/コン',kun:'かね',mn:'Emas/Uang',ex:'金曜日 = Hari Jumat'},{k:'土',on:'ド/ト',kun:'つち',mn:'Tanah',ex:'土曜日 = Hari Sabtu'},{k:'人',on:'ジン/ニン',kun:'ひと',mn:'Orang',ex:'日本人 = Orang Jepang'},{k:'大',on:'ダイ/タイ',kun:'おお',mn:'Besar',ex:'大学 = Universitas'},{k:'小',on:'ショウ',kun:'ちい',mn:'Kecil',ex:'小学校 = SD'}]}}],
+SMA:[{id:'teform',title:'Te-Form',desc:'Bentuk dasar untuk pola kalimat',icon:'🔄',bg:'linear-gradient(135deg,#ff6b6b,#ee5a24)',c:{rules:[{r:'Verb u → って',ex:'買う → 買って',mn:'Membeli'},{r:'Verb ku → いて',ex:'書く → 書いて',mn:'Menulis'},{r:'Verb mu → んで',ex:'飲む → 飲んで',mn:'Minum'},{r:'Verb ru → って',ex:'散る → 散って',mn:'Jatuh'},{r:'Verb tsu → って',ex:'待つ → 待って',mn:'Menunggu'},{r:'Verb nu → んで',ex:'死ぬ → 死んで',mn:'Mati'},{r:'Verb bu → んで',ex:'遊ぶ → 遊んで',mn:'Bermain'},{r:'Verb masu → て',ex:'食べます → 食べて',mn:'Makan'},{r:'する → して',ex:'勉強する → 勉強して',mn:'Belajar'},{r:'くる → きて',ex:'来ます → 来て',mn:'Datang'}],use:[{p:'~てください',ex:'ここに座ってください。= Silakan duduk di sini.'},{p:'~ている',ex:'今勉強しています。= Sedang belajar sekarang.'},{p:'~てから',ex:'ご飯を食べてから、勉強します。= Belajar setelah makan.'}]}},{id:'past_neg',title:'Past & Negative',desc:'Bentuk lampau dan negatif',icon:'⏪',bg:'linear-gradient(135deg,#00d4ff,#0984e3)',c:{past:[{r:'Noun でした',ex:'学生でした。= (Dulu) adalah murid.'},{r:'Verb-mashita',ex:'本を読みました。= Membaca buku (lampau).'},{r:'い-adj かった',ex:'暑かったです。= (Dulu) panas.'},{r:'な-adj だった',ex:'静かだったです。= (Dulu) tenang.'}],neg:[{r:'Noun じゃありません',ex:'学生じゃありません。= Bukan murid.'},{r:'Verb-masen',ex:'食べません。= Tidak makan.'},{r:'い-adj くない',ex:'高くないです。= Tidak mahal.'},{r:'な-adj じゃない',ex:'簡単じゃないです。= Tidak mudah.'}]}},{id:'percakapan',title:'Percakapan Lanjutan',desc:'Dialog situasional',icon:'🗣️',bg:'linear-gradient(135deg,#a855f7,#7c3aed)',c:{dialogs:[{title:'Di Toko',lines:[{jp:'いらっしゃいませ。',id:'Selamat datang.',sp:'Pelayan'},{jp:'この本はいくらですか。',id:'Buku ini berapa?',sp:'Pembeli'},{jp:'千五百円です。',id:'1500 yen.',sp:'Pelayan'},{jp:'じゃあ、これをください。',id:'Saya ambil ini.',sp:'Pembeli'}]},{title:'Di Stasiun',lines:[{jp:'東京行きの電車は何番線ですか。',id:'Kereta ke Tokyo jalur berapa?',sp:'A'},{jp:'3番線です。',id:'Jalur 3.',sp:'B'},{jp:'いつ来ますか。',id:'Kapan datang?',sp:'A'},{jp:'あと5分です。',id:'Lagi 5 menit.',sp:'B'}]}]}},{id:'reading',title:'Reading Comprehension',desc:'Latihan membaca teks Jepang',icon:'📖',bg:'linear-gradient(135deg,#06ffd0,#00b894)',c:{texts:[{title:'自己紹介',text:'私の名前は田中です。東京の大学の学生です。専攻は日本語です。趣味は読書と料理です。週末はよく友達と一緒に映画を見に行きます。',reading:'Watashi no namae wa Tanaka desu. Toukyou no daigaku no gakusei desu.',meaning:'Nama saya Tanaka. Saya mahasiswa universitas di Tokyo. Jurusan saya bahasa Jepang. Hobi saya membaca dan memasak. Akhir pekan saya sering pergi nonton film bersama teman.'}]}}]};
 
 var QZ={
 SD:[{q:'あ',o:['a','i','u','e'],a:0,f:'あ dibaca "a"'},{q:'さ',o:['sa','ta','ka','na'],a:0,f:'さ dibaca "sa"'},{q:'こんにちは',o:['Selamat pagi','Selamat siang','Selamat malam','Sampai jumpa'],a:1,f:'こんにちは = Selamat siang'},{q:'ありがとう',o:['Permisi','Maaf','Terima kasih','Tolong'],a:2,f:'ありがとう = Terima kasih'},{q:'猫',o:['Inu','Neko','Tori','Sakana'],a:1,f:'猫 = Neko (Kucing)'},{q:'水',o:['Mizu','Sora','Yama','Hana'],a:0,f:'水 = Mizu (Air)'},{q:'おはようございます',o:['Selamat malam','Selamat siang','Selamat pagi','Selamat tidur'],a:2,f:'= Selamat pagi formal'},{q:'テレビ',o:['Radio','Televisi','Komputer','Telepon'],a:1,f:'テレビ = Televisi'},{q:'学校',o:['Rumah','Toko','Sekolah','Kantor'],a:2,f:'学校 = Gakkou (Sekolah)'},{q:'え',o:['a','i','u','e'],a:3,f:'え dibaca "e"'}],
 SMP:[{q:'Partikel "は" berfungsi sebagai?',o:['Objek langsung','Topik kalimat','Kepemilikan','Arah'],a:1,f:'は menandai topik kalimat'},{q:'私の本 → Artinya?',o:['Buku saya','Buku kamu','Buku guru','Buku itu'],a:0,f:'の menunjukkan kepemilikan'},{q:'パンを食べます → Artinya?',o:['Minum roti','Beli roti','Makan roti','Buat roti'],a:2,f:'を menandai objek'},{q:'学校に行きます → Artinya?',o:['Pergi dari sekolah','Pergi ke sekolah','Keluar sekolah','Di sekolah'],a:1,f:'に menunjukkan arah'},{q:'金曜日 → Hari apa?',o:['Senin','Rabu','Jumat','Sabtu'],a:2,f:'金 = Emas → Jumat'},{q:'友達と遊びます → Artinya?',o:['Bermain sendiri','Bermain dengan teman','Melihat teman','Mencari teman'],a:1,f:'と = bersama'},{q:'ペンで書きます → Artinya?',o:['Menulis pulpen','Membeli pulpen','Menulis dengan pulpen','Membaca pulpen'],a:2,f:'で menunjukkan alat'},{q:'大きい → Lawan katanya?',o:['高い','小さい','長い','暗い'],a:1,f:'大きい lawannya 小さい'},{q:'先生 → Artinya?',o:['Murid','Dokter','Guru','Karyawan'],a:2,f:'先生 = Sensei'},{q:'日本人 → Artinya?',o:['Orang China','Orang Jepang','Orang Korea','Orang Indonesia'],a:1,f:'日本 + 人 = Orang Jepang'}],
-SMA:[{q:'買う → Te-form?',o:['買いて','買って','買いで','買むて'],a:1,f:'Verb u → って'},{q:'書く → Te-form?',o:['書いて','書って','書んで','書すて'],a:0,f:'Verb ku → いて'},{q:'食べません → Artinya?',o:['Tidak makan','Makan','Tidak mau makan','Sudah makan'],a:0,f:'ません = negatif'},{q:'学生でした → Artinya?',o:['Adalah murid','Bukan murid','Dulu adalah murid','Akan jadi murid'],a:2,f:'でした = lampau'},{q:'静かじゃない → Artinya?',o:['Tidak tenang','Tenang','Sangat tenang','Kurang tenang'],a:0,f:'じゃない = negatif na-adj'},{q:'~てください artinya?',o:['Jangan','Silakan','Boleh','Harus'],a:1,f:'てください = permintaan sopan'},{q:'~ている artinya?',o:['Sudah','Akan','Sedang','Baru'],a:2,f:'ている = sedang melakukan'},{q:'暑かったです → Artinya?',o:['Panas','Tidak panas','Dulu panas','Akan panas'],a:2,f:'かった = lampau i-adj'},{q:'勉強する → Te-form?',o:['勉強して','勉強すて','勉強きて','勉強んて'],a:0,f:'する → して (irregular)'},{q:'来ます → Te-form?',o:['来して','来いて','来て','来って'],a:2,f:'くる → きて (irregular)'}]
-};
+SMA:[{q:'買う → Te-form?',o:['買いて','買って','買いで','買むて'],a:1,f:'Verb u → って'},{q:'書く → Te-form?',o:['書いて','書って','書んで','書すて'],a:0,f:'Verb ku → いて'},{q:'食べません → Artinya?',o:['Tidak makan','Makan','Tidak mau makan','Sudah makan'],a:0,f:'ません = negatif'},{q:'学生でした → Artinya?',o:['Adalah murid','Bukan murid','Dulu adalah murid','Akan jadi murid'],a:2,f:'でした = lampau'},{q:'静かじゃない → Artinya?',o:['Tidak tenang','Tenang','Sangat tenang','Kurang tenang'],a:0,f:'じゃない = negatif na-adj'},{q:'~てください artinya?',o:['Jangan','Silakan','Boleh','Harus'],a:1,f:'てください = permintaan sopan'},{q:'~ている artinya?',o:['Sudah','Akan','Sedang','Baru'],a:2,f:'ている = sedang melakukan'},{q:'暑かったです → Artinya?',o:['Panas','Tidak panas','Dulu panas','Akan panas'],a:2,f:'かった = lampau i-adj'},{q:'勉強する → Te-form?',o:['勉強して','勉強すて','勉強きて','勉強んて'],a:0,f:'する → して (irregular)'},{q:'来ます → Te-form?',o:['来して','来いて','来て','来って'],a:2,f:'くる → きて (irregular)'}]};
 
-/* ===== STATE ===== */
-var DANA_NUM='081234567890',DANA_NM='JapaneseGo Admin';
 var fbOk=false,onLine=navigator.onLine,curUser=null;
 var ud={name:'',score:0,progress:0,level:'SD',done:0,streak:1,lastDay:''};
 var curLv='SD',qz={i:0,s:0,qs:[],done:false};
 var chatHist=[],oaiKey=localStorage.getItem('jg_oak')||'',acts=[];
-var donAmt=5000,_db=null,_auth=null;
+var donAmt=5000,_db=null,_auth=null,_ns=false;
 
-/* ===== NAVIGASI HISTORI (Tombol Kembali HP) ===== */
-var _ns=false; // flag silent: jangan push state saat popstate
-var _navStack=['logS']; // stack navigasi untuk referensi
+function pN(s,t){if(_ns)return;try{history.pushState({s:s,t:t||''},'');}catch(e){}}
+function gT(){var a=document.querySelector('.ni.on');return a?a.dataset.t:'home';}
+function sTS(t){var m={home:'tabHome',learn:'tabLearn',quiz:'tabQuiz',chat:'tabChat',leaderboard:'tabLeaderboard',profile:'tabProfile'};document.querySelectorAll('.tc').forEach(function(c){c.classList.remove('on');});document.getElementById(m[t]).classList.add('on');document.querySelectorAll('.ni').forEach(function(n){n.classList.toggle('on',n.dataset.t===t);});if(t==='home')updHome();if(t==='learn'){curLv=ud.level;updLvBtns();renderMats();hideDet();}if(t==='leaderboard')loadLB();if(t==='quiz'){document.getElementById('quizArea').style.display='block';document.getElementById('quizPlay').style.display='none';}}
 
-function pN(screen,tab){
-    if(_ns)return;
-    try{history.pushState({s:screen,t:tab||''},'');}catch(e){}
-    _navStack.push(screen);
-    if(_navStack.length>30)_navStack.shift();
-}
-function gT(){
-    var a=document.querySelector('.ni.on');
-    return a?a.dataset.t:'home';
-}
-function sTS(t){
-    var m={home:'tabHome',learn:'tabLearn',quiz:'tabQuiz',chat:'tabChat',leaderboard:'tabLeaderboard',profile:'tabProfile'};
-    document.querySelectorAll('.tc').forEach(function(c){c.classList.remove('on');});
-    document.getElementById(m[t]).classList.add('on');
-    document.querySelectorAll('.ni').forEach(function(n){n.classList.toggle('on',n.dataset.t===t);});
-    if(t==='home')updHome();
-    if(t==='learn'){curLv=ud.level;updLvBtns();renderMats();hideDet();}
-    if(t==='leaderboard')loadLB();
-    if(t==='quiz'){document.getElementById('quizArea').style.display='block';document.getElementById('quizPlay').style.display='none';}
-}
-
-/* ===== INIT ===== */
 (function(){
-    try{var s=localStorage.getItem('jg_u');if(s)ud=JSON.parse(s);}catch(e){}
-    if(localStorage.getItem('jg_th')==='light')document.body.classList.add('light');
-    updThIco();chkStreak();initFB();
-    if(localStorage.getItem('jg_dc'))document.getElementById('donBanner').style.display='none';
-    window.addEventListener('online',function(){onLine=true;document.getElementById('offBan').classList.remove('sh');toast('Koneksi kembali','ok');});
-    window.addEventListener('offline',function(){onLine=false;document.getElementById('offBan').classList.add('sh');});
-    if(window.speechSynthesis){speechSynthesis.onvoiceschanged=function(){speechSynthesis.getVoices();};speechSynthesis.getVoices();}
-
-    /* ===== POPSTATE: Tombol Kembali HP ===== */
-    window.addEventListener('popstate',function(e){
-        if(_ns)return;
-
-        // 1. Intersep: tutup modal jika terbuka
-        if(document.getElementById('modalOv').classList.contains('sh')){
-            closeModal();
-            _ns=true;
-            try{history.pushState({s:'mainA',t:gT()},'');}catch(ex){}
-            _ns=false;
-            return;
-        }
-        // 2. Intersep: tutup detail materi jika terbuka
-        if(document.getElementById('matDetail').classList.contains('on')){
-            hideDet();
-            _ns=true;
-            try{history.pushState({s:'mainA',t:'learn'},'');}catch(ex){}
-            _ns=false;
-            return;
-        }
-        // 3. Intersep: keluar dari quiz jika sedang bermain
-        if(document.getElementById('quizPlay').style.display==='block'){
-            document.getElementById('quizPlay').style.display='none';
-            document.getElementById('quizArea').style.display='block';
-            _ns=true;
-            try{history.pushState({s:'mainA',t:'quiz'},'');}catch(ex){}
-            _ns=false;
-            return;
-        }
-
-        // 4. Navigasi normal: kembali ke state sebelumnya
-        _ns=true;
-        if(e.state){
-            if(e.state.s==='logS'){
-                showScr('logS');
-            }else if(e.state.s==='mainA'&&e.state.t){
-                sTS(e.state.t);
-            }
-        }else{
-            // State kosong (back paling awal) → ke login
-            if(curUser&&fbOk){
-                // User sudah login, jangan ke login, tetap di home
-                sTS('home');
-                try{history.pushState({s:'mainA',t:'home'},'');}catch(ex){}
-            }else{
-                showScr('logS');
-            }
-        }
-        _ns=false;
-    });
-
-    // Set state awal
-    try{history.replaceState({s:'logS',t:''},'');}catch(e){}
+try{var s=localStorage.getItem('jg_u');if(s)ud=JSON.parse(s);}catch(e){}
+if(localStorage.getItem('jg_th')==='light')document.body.classList.add('light');
+updThIco();chkStreak();initFB();
+if(localStorage.getItem('jg_dc'))document.getElementById('donBanner').style.display='none';
+window.addEventListener('online',function(){onLine=true;document.getElementById('offBan').classList.remove('sh');toast('Koneksi kembali','ok');});
+window.addEventListener('offline',function(){onLine=false;document.getElementById('offBan').classList.add('sh');});
+if(window.speechSynthesis){speechSynthesis.onvoiceschanged=function(){speechSynthesis.getVoices();};speechSynthesis.getVoices();}
+window.addEventListener('popstate',function(e){
+    if(_ns)return;
+    if(document.getElementById('modalOv').classList.contains('sh')){closeModal();_ns=true;try{history.pushState({s:'mainA',t:gT()},'');}catch(ex){}_ns=false;return;}
+    if(document.getElementById('matDetail').classList.contains('on')){hideDet();_ns=true;try{history.pushState({s:'mainA',t:'learn'},'');}catch(ex){}_ns=false;return;}
+    if(document.getElementById('quizPlay').style.display==='block'){document.getElementById('quizPlay').style.display='none';document.getElementById('quizArea').style.display='block';_ns=true;try{history.pushState({s:'mainA',t:'quiz'},'');}catch(ex){}_ns=false;return;}
+    _ns=true;
+    if(e.state){
+        if(e.state.s==='logS')showScr('logS');
+        else if(e.state.s==='mainA'&&e.state.t)sTS(e.state.t);
+    }else{
+        if(curUser&&fbOk){sTS('home');try{history.pushState({s:'mainA',t:'home'},'');}catch(ex){}}
+        else showScr('logS');
+    }
+    _ns=false;
+});
+try{history.replaceState({s:'logS',t:''},'');}catch(e){}
 })();
 
-function initFB(){
-    try{
-        firebase.initializeApp(FBC);_auth=firebase.auth();_db=firebase.firestore();fbOk=true;
-        _auth.onAuthStateChanged(function(u){if(u){curUser=u;loadUD(u.uid);enterApp();}});
-    }catch(e){console.error('Firebase init error:',e);showFbErr('Gagal menghubungkan Firebase: '+e.message);}
-}
+function initFB(){try{firebase.initializeApp(FBC);_auth=firebase.auth();_db=firebase.firestore();fbOk=true;_auth.onAuthStateChanged(function(u){if(u){curUser=u;loadUD(u.uid);enterApp();}});}catch(e){console.error('Firebase init error:',e);showFbErr('Gagal menghubungkan Firebase: '+e.message);}}
 function showFbErr(msg){var el=document.getElementById('fbErr');el.innerHTML='<i class="fas fa-exclamation-triangle"></i> '+msg;el.classList.add('sh');}
 
-/* ===== AUTH ===== */
-function googleLogin(){
-    if(!fbOk||!_auth){toast('Firebase belum siap. Gunakan mode tamu.','er');return;}
-    showLoad('Menghubungkan ke Google...');
-    pN('logS',''); // push state login sebelum navigasi
-    _auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).then(function(r){
-        hideLoad();curUser=r.user;ud.name=r.user.displayName||'Pengguna';saveUD(r.user.uid);enterApp();toast('Selamat datang, '+ud.name+'!','ok');
-    }).catch(function(e){
-        hideLoad();var msg=e.message||'Unknown error';
-        if(e.code==='auth/popup-closed-by-user')msg='Popup ditutup. Coba lagi.';
-        if(e.code==='auth/unauthorized-domain')msg='Domain belum diizinkan. Tambahkan di Firebase Console → Authentication → Authorized domains.';
-        showFbErr(msg);toast('Login gagal','er');
-    });
-}
+function googleLogin(){if(!fbOk||!_auth){toast('Firebase belum siap. Gunakan mode tamu.','er');return;}showLoad('Menghubungkan ke Google...');pN('logS','');_auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).then(function(r){hideLoad();curUser=r.user;ud.name=r.user.displayName||'Pengguna';saveUD(r.user.uid);enterApp();toast('Selamat datang, '+ud.name+'!','ok');}).catch(function(e){hideLoad();var msg=e.message||'Unknown error';if(e.code==='auth/popup-closed-by-user')msg='Popup ditutup. Coba lagi.';if(e.code==='auth/unauthorized-domain')msg='Domain belum diizinkan. Tambahkan di Firebase Console → Authentication → Authorized domains.';showFbErr(msg);toast('Login gagal','er');});}
 function guestLogin(){pN('logS','');ud.name=ud.name||'Tamu';saveLocal();enterApp();toast('Mode tamu aktif','inf');click();}
 function doLogout(){showModal('Keluar','Apakah kamu yakin ingin keluar?',function(){if(fbOk&&_auth)_auth.signOut();curUser=null;showScr('logS');closeModal();toast('Berhasil keluar','inf');});}
 
-/* ===== DATA ===== */
 function saveUD(uid){saveLocal();if(!fbOk||!_db)return;try{_db.collection('users').doc(uid).set({name:ud.name,score:ud.score,progress:ud.progress,level:ud.level,done:ud.done,streak:ud.streak,lastDay:ud.lastDay},{merge:true});_db.collection('leaderboard').doc(uid).set({name:ud.name,score:ud.score},{merge:true});}catch(e){}}
 function loadUD(uid){if(!fbOk||!_db)return;_db.collection('users').doc(uid).get().then(function(d){if(d.exists){var x=d.data();ud.name=x.name||ud.name;ud.score=x.score||0;ud.progress=x.progress||0;ud.level=x.level||'SD';ud.done=x.done||0;ud.streak=x.streak||1;ud.lastDay=x.lastDay||'';saveLocal();updHome();}}).catch(function(){});}
 function saveLocal(){try{localStorage.setItem('jg_u',JSON.stringify(ud));}catch(e){}}
 function chkStreak(){var t=new Date().toDateString();if(ud.lastDay!==t){var y=new Date(Date.now()-86400000).toDateString();ud.streak=(ud.lastDay===y)?(ud.streak||0)+1:1;ud.lastDay=t;saveLocal();}}
 function resetProgress(){showModal('Reset Progress','Semua skor dan progress akan dihapus. Lanjutkan?',function(){ud.score=0;ud.progress=0;ud.done=0;ud.streak=1;acts=[];saveLocal();if(curUser)saveUD(curUser.uid);updHome();closeModal();toast('Progress direset','ok');});}
 
-/* ===== NAVIGASI TAB ===== */
 function showScr(id){document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});document.getElementById(id).classList.add('on');}
-function switchTab(t){
-    sTS(t); // switch UI
-    pN('mainA',t); // push ke history
-    click();
-}
+function switchTab(t){sTS(t);pN('mainA',t);click();}
 function enterApp(){showScr('mainA');updHome();pN('mainA','home');}
 
-/* ===== HOME ===== */
-function updHome(){
-    document.getElementById('welName').textContent='Halo, '+ud.name+'!';
-    document.getElementById('hScore').textContent=ud.score;
-    document.getElementById('hLevel').textContent=ud.level;
-    document.getElementById('hDone').textContent=ud.done;
-    var p=Math.min(100,Math.round(ud.progress));
-    document.getElementById('hPct').textContent=p+'%';
-    document.getElementById('hPfill').style.width=p+'%';
-    document.getElementById('streakNum').textContent=ud.streak||1;
-    var ini=ud.name?ud.name.charAt(0).toUpperCase():'?';
-    document.getElementById('userAv').textContent=ini;
-    document.getElementById('pAvatar').textContent=ini;
-    document.getElementById('pName').textContent=ud.name||'Pengguna';
-    document.getElementById('pEmail').textContent=curUser?curUser.email:'Mode Tamu';
-    var al=document.getElementById('activityLog');
-    if(!acts.length)al.innerHTML='<p style="color:var(--t3);font-size:13px;text-align:center;padding:10px">Belum ada aktivitas</p>';
-    else al.innerHTML=acts.slice(-5).reverse().map(function(a){return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--gb)"><i class="'+a.ic+'" style="color:var(--nb);width:20px;text-align:center"></i><span style="flex:1;font-size:13px">'+a.tx+'</span><span style="font-size:10px;color:var(--t3)">'+a.tm+'</span></div>';}).join('');
-    if(!onLine)document.getElementById('offBan').classList.add('sh');else document.getElementById('offBan').classList.remove('sh');
-}
+function updHome(){document.getElementById('welName').textContent='Halo, '+ud.name+'!';document.getElementById('hScore').textContent=ud.score;document.getElementById('hLevel').textContent=ud.level;document.getElementById('hDone').textContent=ud.done;var p=Math.min(100,Math.round(ud.progress));document.getElementById('hPct').textContent=p+'%';document.getElementById('hPfill').style.width=p+'%';document.getElementById('streakNum').textContent=ud.streak||1;var ini=ud.name?ud.name.charAt(0).toUpperCase():'?';document.getElementById('userAv').textContent=ini;document.getElementById('pAvatar').textContent=ini;document.getElementById('pName').textContent=ud.name||'Pengguna';document.getElementById('pEmail').textContent=curUser?curUser.email:'Mode Tamu';var al=document.getElementById('activityLog');if(!acts.length)al.innerHTML='<p style="color:var(--t3);font-size:13px;text-align:center;padding:10px">Belum ada aktivitas</p>';else al.innerHTML=acts.slice(-5).reverse().map(function(a){return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--gb)"><i class="'+a.ic+'" style="color:var(--nb);width:20px;text-align:center"></i><span style="flex:1;font-size:13px">'+a.tx+'</span><span style="font-size:10px;color:var(--t3)">'+a.tm+'</span></div>';}).join('');if(!onLine)document.getElementById('offBan').classList.add('sh');else document.getElementById('offBan').classList.remove('sh');}
 function addAct(ic,tx){var n=new Date();acts.push({ic:ic,tx:tx,tm:String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')});if(acts.length>20)acts.shift();}
 
-/* ===== DONASI ===== */
 function closeDonBanner(){document.getElementById('donBanner').style.display='none';localStorage.setItem('jg_dc','1');}
 function openDonasi(){var fmt=DANA_NUM.replace(/(\d{4})(?=\d)/g,'$1-');document.getElementById('modContent').innerHTML='<div class="don-card"><div class="don-logo">D</div><h3 style="font-family:Orbitron,sans-serif;font-size:20px;font-weight:900;background:linear-gradient(135deg,#108ee9,#0068b5);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Donasi via DANA</h3><p style="color:var(--t2);font-size:13px;margin-bottom:24px">Dukung pengembangan JapaneseGo AI agar tetap gratis</p><div style="font-size:12px;color:var(--t2);font-weight:600;margin-bottom:8px;text-align:left">Pilih nominal:</div><div class="don-amt"><button class="don-amt-btn on" onclick="pickDon(this,5000)">5.000</button><button class="don-amt-btn" onclick="pickDon(this,10000)">10.000</button><button class="don-amt-btn" onclick="pickDon(this,20000)">20.000</button><button class="don-amt-btn" onclick="pickDon(this,50000)">50.000</button><button class="don-amt-btn" onclick="pickDon(this,100000)">100.000</button><button class="don-amt-btn" onclick="pickDon(this,-1)">Lainnya</button></div><div id="donCustBox" style="display:none;margin-bottom:20px"><input type="number" id="donCustVal" placeholder="Masukkan nominal..." min="1000" style="width:100%;padding:12px 16px;background:var(--glass);border:1px solid var(--gb);border-radius:var(--rx);color:var(--t1);font-size:14px;outline:none;font-family:Inter,sans-serif"></div><div class="don-dana-info"><div class="dlbl">Transfer ke DANA</div><div class="dval">'+fmt+'</div><div class="dnm">a.n. '+DANA_NM+'</div></div><button class="don-pay-btn" onclick="doDon()"><i class="fas fa-paper-plane"></i> Buka DANA untuk Donasi</button><p class="don-note">Donasi bersifat sukarela. Semua fitur tetap gratis. Terima kasih!</p></div>';donAmt=5000;document.getElementById('modalOv').classList.add('sh');}
 function pickDon(el,v){document.querySelectorAll('.don-amt-btn').forEach(function(b){b.classList.remove('on');});el.classList.add('on');donAmt=v;var cb=document.getElementById('donCustBox');if(v===-1){cb.style.display='block';setTimeout(function(){document.getElementById('donCustVal').focus();},100);}else{cb.style.display='none';}}
 function doDon(){var amt=donAmt;if(amt===-1){var cv=document.getElementById('donCustVal').value;if(!cv||parseInt(cv)<1000){toast('Nominal minimal Rp1.000','er');return;}amt=parseInt(cv);}var f=amt.toLocaleString('id-ID');var wa=DANA_NUM.startsWith('0')?'62'+DANA_NUM.substring(1):DANA_NUM;window.open('https://wa.me/'+wa+'?text='+encodeURIComponent('Halo, saya ingin berdonasi Rp'+f+' untuk JapaneseGo AI. Terima kasih!'),'_blank');toast('Membuka WhatsApp...','inf');closeModal();}
 
-/* ===== BELAJAR ===== */
 function selectLevel(lv){curLv=lv;ud.level=lv;saveLocal();if(curUser)saveUD(curUser.uid);updLvBtns();renderMats();hideDet();click();}
 function updLvBtns(){document.querySelectorAll('.lbtn').forEach(function(b){b.classList.toggle('on',b.dataset.lv===curLv);});}
 function renderMats(){var el=document.getElementById('matList'),ms=MAT[curLv]||[],h='';for(var i=0;i<ms.length;i++){var m=ms[i];h+='<div class="mcard" onclick="openMat(\''+m.id+'\')"><div class="mico" style="background:'+m.bg+'">'+m.icon+'</div><div class="minfo"><h4>'+m.title+'</h4><p>'+m.desc+'</p></div><div class="marr"><i class="fas fa-chevron-right"></i></div></div>';}el.innerHTML=h;}
 function openMat(id){var ms=MAT[curLv]||[],m=null;for(var i=0;i<ms.length;i++){if(ms[i].id===id){m=ms[i];break;}}if(!m)return;document.getElementById('matList').style.display='none';document.getElementById('levelSel').style.display='none';document.getElementById('learnTit').style.display='none';var d=document.getElementById('matDetail');d.classList.add('on');d.innerHTML=buildMat(m);click();}
 function hideDet(){document.getElementById('matList').style.display='block';document.getElementById('levelSel').style.display='grid';document.getElementById('learnTit').style.display='flex';var d=document.getElementById('matDetail');d.classList.remove('on');d.innerHTML='';}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function buildMat(m){var c=m.c,h='<button class="bkb" onclick="hideDet()"><i class="fas fa-arrow-left"></i> Kembali</button><div class="dt">'+m.title+'</div><div class="dsub">'+m.desc+'</div>';
-if(c.chars){var sc=c.chars.slice(0,10).map(function(x){return x[0];}).join('');h+='<button class="abtn" onclick="speak(\''+esc(sc)+'\')"><i class="fas fa-volume-high"></i></button><div class="kgrid">';for(var i=0;i<c.chars.length;i++)h+='<div class="kitem" onclick="speak(\''+esc(c.chars[i][0])+'\')"><div class="ch">'+c.chars[i][0]+'</div><div class="rm">'+c.chars[i][1]+'</div></div>';h+='</div>';if(c.ex)for(var i=0;i<c.ex.length;i++)h+='<div class="ebox ck" onclick="speak(\''+esc(c.ex[i].jp)+'\')"><div class="jp">'+c.ex[i].jp+' <i class="fas fa-volume-high" style="font-size:12px;color:var(--nb)"></i></div><div class="ro">'+c.ex[i].ro+'</div><div class="id">'+c.ex[i].id+'</div></div>';}
-if(c.words)for(var i=0;i<c.words.length;i++)h+='<div class="ebox ck" onclick="speak(\''+esc(c.words[i].jp)+'\')"><div class="jp">'+c.words[i].jp+' <i class="fas fa-volume-high" style="font-size:12px;color:var(--nb)"></i></div><div class="ro">'+c.words[i].ro+'</div><div class="id">'+c.words[i].id+'</div></div>';
-if(c.greet)for(var i=0;i<c.greet.length;i++)h+='<div class="ebox ck" onclick="speak(\''+esc(c.greet[i].jp)+'\')"><div class="jp">'+c.greet[i].jp+' <i class="fas fa-volume-high" style="font-size:12px;color:var(--nb)"></i></div><div class="ro">'+c.greet[i].ro+'</div><div class="id">'+c.greet[i].id+'</div></div>';
-if(c.particles)for(var i=0;i<c.particles.length;i++)h+='<div class="ebox"><div class="jp" style="font-size:18px">'+c.particles[i].p+'</div><div class="ro" style="color:var(--nc);font-weight:600">'+c.particles[i].fn+'</div><div class="id">'+c.particles[i].ex+'</div></div>';
-if(c.patterns)for(var i=0;i<c.patterns.length;i++)h+='<div class="ebox"><div class="jp" style="font-size:16px">'+c.patterns[i].t+'</div><div class="ro">'+c.patterns[i].d+'</div><div class="id">'+c.patterns[i].ex+'</div></div>';
-if(c.kanji)for(var i=0;i<c.kanji.length;i++)h+='<div class="ebox ck" onclick="speak(\''+esc(c.kanji[i].k)+'\')"><div class="jp" style="font-size:32px">'+c.kanji[i].k+'</div><div class="ro">On: '+c.kanji[i].on+' | Kun: '+c.kanji[i].kun+'</div><div class="id">'+c.kanji[i].mn+' — '+c.kanji[i].ex+'</div></div>';
-if(c.rules){h+='<p style="color:var(--t2);font-size:12px;margin-bottom:12px;font-weight:600">Aturan Perubahan:</p>';for(var i=0;i<c.rules.length;i++)h+='<div class="ebox"><div class="jp">'+c.rules[i].r+'</div><div class="ro">'+c.rules[i].ex+'</div><div class="id">'+c.rules[i].mn+'</div></div>';if(c.use){h+='<p style="color:var(--t2);font-size:12px;margin:16px 0 12px;font-weight:600">Penggunaan Te-form:</p>';for(var i=0;i<c.use.length;i++)h+='<div class="ebox ck" onclick="speak(\''+esc(c.use[i].ex.split('\u3002')[0])+'\')"><div class="jp" style="font-size:14px">'+c.use[i].p+'</div><div class="id">'+c.use[i].ex+'</div></div>';}}
-if(c.past){h+='<p style="color:var(--nc);font-size:13px;font-weight:700;margin-bottom:12px">Bentuk Lampau</p>';for(var i=0;i<c.past.length;i++)h+='<div class="ebox"><div class="jp">'+c.past[i].r+'</div><div class="id">'+c.past[i].ex+'</div></div>';}
-if(c.neg){h+='<p style="color:var(--nk);font-size:13px;font-weight:700;margin:16px 0 12px">Bentuk Negatif</p>';for(var i=0;i<c.neg.length;i++)h+='<div class="ebox"><div class="jp">'+c.neg[i].r+'</div><div class="id">'+c.neg[i].ex+'</div></div>';}
-if(c.dialogs)for(var d=0;d<c.dialogs.length;d++){h+='<div style="margin-bottom:16px"><div class="jp" style="font-size:14px;text-align:left;padding:12px 16px;margin-bottom:8px">'+c.dialogs[d].title+'</div>';for(var i=0;i<c.dialogs[d].lines.length;i++){var ln=c.dialogs[d].lines[i];h+='<div class="ebox ck" onclick="speak(\''+esc(ln.jp.replace(/\u3002/g,''))+'\')"><div style="font-size:10px;color:var(--nc);font-weight:700;margin-bottom:4px">'+ln.sp+'</div><div class="jp" style="font-size:14px">'+ln.jp+' <i class="fas fa-volume-high" style="font-size:11px;color:var(--nb)"></i></div><div class="id">'+ln.id+'</div></div>';}h+='</div>';}
-if(c.texts)for(var i=0;i<c.texts.length;i++)h+='<div class="jtxt">'+c.texts[i].text+'</div><div class="ebox"><div class="ro" style="margin-bottom:6px">'+c.texts[i].reading+'</div><div class="id">'+c.texts[i].meaning+'</div></div>';
-h+='<button class="btn bp bb" style="margin-top:20px" onclick="compMat(\''+esc(m.id)+'\')"><i class="fas fa-check"></i> Selesai & Tambah Progress</button>';return h;}
+function buildMat(m){var c=m.c,h='<button class="bkb" onclick="hideDet()"><i class="fas fa-arrow-left"></i> Kembali</button><div class="dt">'+m.title+'</div><div class="dsub">'+m.desc+'</div>';if(c.chars){var sc=c.chars.slice(0,10).map(function(x){return x[0];}).join('');h+='<button class="abtn" onclick="speak(\''+esc(sc)+'\')"><i class="fas fa-volume-high"></i></button><div class="kgrid">';for(var i=0;i<c.chars.length;i++)h+='<div class="kitem" onclick="speak(\''+esc(c.chars[i][0])+'\')"><div class="ch">'+c.chars[i][0]+'</div><div class="rm">'+c.chars[i][1]+'</div></div>';h+='</div>';if(c.ex)for(var i=0;i<c.ex.length;i++)h+='<div class="ebox ck" onclick="speak(\''+esc(c.ex[i].jp)+'\')"><div class="jp">'+c.ex[i].jp+' <i class="fas fa-volume-high" style="font-size:12px;color:var(--nb)"></i></div><div class="ro">'+c.ex[i].ro+'</div><div class="id">'+c.ex[i].id+'</div></div>';}if(c.words)for(var i=0;i<c.words.length;i++)h+='<div class="ebox ck" onclick="speak(\''+esc(c.words[i].jp)+'\')"><div class="jp">'+c.words[i].jp+' <i class="fas fa-volume-high" style="font-size:12px;color:var(--nb)"></i></div><div class="ro">'+c.words[i].ro+'</div><div class="id">'+c.words[i].id+'</div></div>';if(c.greet)for(var i=0;i<c.greet.length;i++)h+='<div class="ebox ck" onclick="speak(\''+esc(c.greet[i].jp)+'\')"><div class="jp">'+c.greet[i].jp+' <i class="fas fa-volume-high" style="font-size:12px;color:var(--nb)"></i></div><div class="ro">'+c.greet[i].ro+'</div><div class="id">'+c.greet[i].id+'</div></div>';if(c.particles)for(var i=0;i<c.particles.length;i++)h+='<div class="ebox"><div class="jp" style="font-size:18px">'+c.particles[i].p+'</div><div class="ro" style="color:var(--nc);font-weight:600">'+c.particles[i].fn+'</div><div class="id">'+c.particles[i].ex+'</div></div>';if(c.patterns)for(var i=0;i<c.patterns.length;i++)h+='<div class="ebox"><div class="jp" style="font-size:16px">'+c.patterns[i].t+'</div><div class="ro">'+c.patterns[i].d+'</div><div class="id">'+c.patterns[i].ex+'</div></div>';if(c.kanji)for(var i=0;i<c.kanji.length;i++)h+='<div class="ebox ck" onclick="speak(\''+esc(c.kanji[i].k)+'\')"><div class="jp" style="font-size:32px">'+c.kanji[i].k+'</div><div class="ro">On: '+c.kanji[i].on+' | Kun: '+c.kanji[i].kun+'</div><div class="id">'+c.kanji[i].mn+' — '+c.kanji[i].ex+'</div></div>';if(c.rules){h+='<p style="color:var(--t2);font-size:12px;margin-bottom:12px;font-weight:600">Aturan Perubahan:</p>';for(var i=0;i<c.rules.length;i++)h+='<div class="ebox"><div class="jp">'+c.rules[i].r+'</div><div class="ro">'+c.rules[i].ex+'</div><div class="id">'+c.rules[i].mn+'</div></div>';if(c.use){h+='<p style="color:var(--t2);font-size:12px;margin:16px 0 12px;font-weight:600">Penggunaan Te-form:</p>';for(var i=0;i<c.use.length;i++)h+='<div class="ebox ck" onclick="speak(\''+esc(c.use[i].ex.split('\u3002')[0])+'\')"><div class="jp" style="font-size:14px">'+c.use[i].p+'</div><div class="id">'+c.use[i].ex+'</div></div>';}}if(c.past){h+='<p style="color:var(--nc);font-size:13px;font-weight:700;margin-bottom:12px">Bentuk Lampau</p>';for(var i=0;i<c.past.length;i++)h+='<div class="ebox"><div class="jp">'+c.past[i].r+'</div><div class="id">'+c.past[i].ex+'</div></div>';}if(c.neg){h+='<p style="color:var(--nk);font-size:13px;font-weight:700;margin:16px 0 12px">Bentuk Negatif</p>';for(var i=0;i<c.neg.length;i++)h+='<div class="ebox"><div class="jp">'+c.neg[i].r+'</div><div class="id">'+c.neg[i].ex+'</div></div>';}if(c.dialogs)for(var d=0;d<c.dialogs.length;d++){h+='<div style="margin-bottom:16px"><div class="jp" style="font-size:14px;text-align:left;padding:12px 16px;margin-bottom:8px">'+c.dialogs[d].title+'</div>';for(var i=0;i<c.dialogs[d].lines.length;i++){var ln=c.dialogs[d].lines[i];h+='<div class="ebox ck" onclick="speak(\''+esc(ln.jp.replace(/\u3002/g,''))+'\')"><div style="font-size:10px;color:var(--nc);font-weight:700;margin-bottom:4px">'+ln.sp+'</div><div class="jp" style="font-size:14px">'+ln.jp+' <i class="fas fa-volume-high" style="font-size:11px;color:var(--nb)"></i></div><div class="id">'+ln.id+'</div></div>';}h+='</div>';}if(c.texts)for(var i=0;i<c.texts.length;i++)h+='<div class="jtxt">'+c.texts[i].text+'</div><div class="ebox"><div class="ro" style="margin-bottom:6px">'+c.texts[i].reading+'</div><div class="id">'+c.texts[i].meaning+'</div></div>';h+='<button class="btn bp bb" style="margin-top:20px" onclick="compMat(\''+esc(m.id)+'\')"><i class="fas fa-check"></i> Selesai & Tambah Progress</button>';return h;}
 function compMat(id){ud.score+=10;ud.done=(ud.done||0)+1;ud.progress=Math.min(100,ud.done*5);saveLocal();if(curUser)saveUD(curUser.uid);addAct('fas fa-check-circle','Menyelesaikan: '+id+' (+10)');toast('Progress ditambahkan! +10 poin','ok');click();hideDet();}
 
-/* ===== AUDIO ===== */
 function speak(t){if(!t||!window.speechSynthesis)return;try{window.speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.lang='ja-JP';u.rate=0.8;var v=speechSynthesis.getVoices();for(var i=0;i<v.length;i++){if(v[i].lang.indexOf('ja')===0){u.voice=v[i];break;}}speechSynthesis.speak(u);}catch(e){}}
 
-/* ===== QUIZ ===== */
 function startQuiz(){var qs=QZ[curLv].slice();for(var i=qs.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=qs[i];qs[i]=qs[j];qs[j]=tmp;}qz={i:0,s:0,qs:qs.slice(0,10),done:false};document.getElementById('quizArea').style.display='none';document.getElementById('quizPlay').style.display='block';renderQ();click();}
 function renderQ(){if(qz.i>=qz.qs.length){showQRes();return;}var q=qz.qs[qz.i],L=['A','B','C','D'],h='<div class="qcont"><div class="qhdr"><span class="qcnt">'+(qz.i+1)+' / '+qz.qs.length+'</span><span class="qsb"><i class="fas fa-star"></i> '+qz.s+'</span></div><div class="qq"><div class="ql">Pertanyaan</div><div class="qt">'+q.q+'</div></div><div class="qopts">';for(var i=0;i<q.o.length;i++)h+='<button class="qopt" id="qo'+i+'" onclick="ansQ('+i+')"><span class="ol">'+L[i]+'</span><span>'+q.o[i]+'</span></button>';h+='</div><div class="qfb" id="qfb"></div></div>';document.getElementById('quizPlay').innerHTML=h;qz.done=false;}
 function ansQ(idx){if(qz.done)return;qz.done=true;var q=qz.qs[qz.i],ok=idx===q.a,fb=document.getElementById('qfb');for(var i=0;i<q.o.length;i++){var el=document.getElementById('qo'+i);el.classList.add('dis');if(i===q.a)el.classList.add('cor');if(i===idx&&!ok)el.classList.add('wrg');}if(ok){qz.s+=10;fb.className='qfb sh cf';fb.innerHTML='<i class="fas fa-check-circle"></i> Benar! '+q.f;click();}else{fb.className='qfb sh wf';fb.innerHTML='<i class="fas fa-times-circle"></i> Salah. '+q.f;}setTimeout(function(){qz.i++;renderQ();},1500);}
 function showQRes(){var t=qz.qs.length*10,p=Math.round(qz.s/t*100),ic=p>=80?'\uD83C\uDF89':p>=50?'\uD83D\uDC4D':'\uD83D\uDCAA',mg=p>=80?'Luar biasa!':p>=50?'Bagus, terus belajar!':'Jangan menyerah!';ud.score+=qz.s;ud.progress=Math.min(100,ud.done*5+Math.round(p/5));saveLocal();if(curUser)saveUD(curUser.uid);addAct('fas fa-brain','Quiz: '+qz.s+'/'+t+' poin');document.getElementById('quizPlay').innerHTML='<div class="qres"><div class="ri">'+ic+'</div><h3>'+qz.s+' Poin</h3><p>'+mg+' ('+p+'%)</p><button class="btn bp" style="max-width:220px;margin:0 auto" onclick="startQuiz()"><i class="fas fa-redo"></i> Coba Lagi</button><button class="btn bs bsm" style="margin:12px auto 0;display:block" onclick="switchTab(\'home\')">Kembali ke Home</button></div>';}
 
-/* ===== CHAT ===== */
 function sendChat(){var inp=document.getElementById('chatIn'),msg=inp.value.trim();if(!msg)return;inp.value='';var hint=document.getElementById('chatHint');if(hint)hint.style.display='none';addBubble('us',msg);click();if(!oaiKey){addBubble('ai','Untuk menggunakan AI Chat, set API Key OpenAI di menu Profil > Set API Key OpenAI.');return;}showTyp();chatHist.push({role:'user',content:msg});fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+oaiKey},body:JSON.stringify({model:'gpt-4o-mini',messages:[{role:'system',content:'Kamu adalah guru bahasa Jepang yang ramah dan sabar untuk siswa Indonesia. Gunakan bahasa Indonesia. Berikan contoh kalimat Jepang beserta artinya. Jawaban singkat tapi jelas.'}].concat(chatHist.slice(-10)),max_tokens:500,temperature:0.7})}).then(function(r){if(!r.ok)throw new Error('API Error '+r.status);return r.json();}).then(function(d){hideTyp();var reply=d.choices[0].message.content;chatHist.push({role:'assistant',content:reply});addBubble('ai',reply);}).catch(function(e){hideTyp();addBubble('ai','Maaf, terjadi kesalahan: '+e.message);});}
 function addBubble(type,text){var c=document.getElementById('chatMsgs'),d=document.createElement('div');d.className='chb '+type;d.innerHTML='<div class="sn">'+(type==='ai'?'Sensei AI':'Kamu')+'</div>'+text.replace(/\n/g,'<br>');c.appendChild(d);c.scrollTop=c.scrollHeight;}
 function showTyp(){var c=document.getElementById('chatMsgs'),d=document.createElement('div');d.className='chb ai';d.id='typInd';d.innerHTML='<div class="sn">Sensei AI</div><div class="chtyp"><span></span><span></span><span></span></div>';c.appendChild(d);c.scrollTop=c.scrollHeight;}
 function hideTyp(){var el=document.getElementById('typInd');if(el)el.remove();}
 
-/* ===== LEADERBOARD ===== */
 function loadLB(){var el=document.getElementById('lbList');if(!fbOk||!_db){el.innerHTML='<div class="cd" style="text-align:center;padding:30px"><i class="fas fa-cloud-off" style="font-size:32px;color:var(--t3);margin-bottom:12px;display:block"></i><p style="color:var(--t3);font-size:13px">Leaderboard memerlukan koneksi Firebase.</p></div>';return;}_db.collection('leaderboard').orderBy('score','desc').limit(5).get().then(function(snap){if(snap.empty){el.innerHTML='<div class="cd" style="text-align:center;padding:30px"><p style="color:var(--t3);font-size:13px">Belum ada data</p></div>';return;}var h='',idx=0;snap.forEach(function(d){idx++;var x=d.data(),rc=idx===1?'g':idx===2?'s':'b',medal=idx<=3?'<div class="lbr '+rc+'">'+idx+'</div>':'<div class="lbr" style="color:var(--t3)">'+idx+'</div>';h+='<div class="lbi">'+medal+'<div class="lba">'+((x.name||'?').charAt(0)).toUpperCase()+'</div><div class="lbinf"><div class="lbn">'+(x.name||'Anonim')+'</div></div><div class="lbsc">'+(x.score||0)+'</div></div>';});el.innerHTML=h;}).catch(function(){el.innerHTML='<div class="cd" style="text-align:center;padding:30px"><p style="color:var(--t3);font-size:13px">Gagal memuat leaderboard</p></div>';});}
 
-/* ===== UI HELPERS ===== */
 function showModal(title,body,cb){document.getElementById('modContent').innerHTML='<h3>'+title+'</h3><p>'+body+'</p><div class="moda"><button class="btn bs bsm" onclick="closeModal()">Tutup</button>'+(cb?'<button class="btn bp bsm" id="modCfm">Ya</button>':'')+'</div>';if(cb)document.getElementById('modCfm').onclick=cb;document.getElementById('modalOv').classList.add('sh');}
 function closeModal(){document.getElementById('modalOv').classList.remove('sh');}
 function toast(msg,type){var c=document.getElementById('toastCon'),d=document.createElement('div');d.className='tst '+(type||'inf');var ic=type==='ok'?'fa-check-circle':type==='er'?'fa-circle-xmark':'fa-info-circle';d.innerHTML='<i class="fas '+ic+'"></i> '+msg;c.appendChild(d);setTimeout(function(){d.style.opacity='0';d.style.transition='opacity .3s';setTimeout(function(){d.remove();},300);},3000);}
@@ -501,7 +364,6 @@ function toggleTheme(){document.body.classList.toggle('light');localStorage.setI
 function updThIco(){document.getElementById('themeIcon').className=document.body.classList.contains('light')?'fas fa-sun':'fas fa-moon';}
 function click(){try{var a=new(window.AudioContext||window.webkitAudioContext)();var o=a.createOscillator();var g=a.createGain();o.connect(g);g.connect(a.destination);o.frequency.value=800;g.gain.value=0.03;o.start();o.stop(a.currentTime+0.05);}catch(e){}}
 
-/* ===== SETTINGS ===== */
 function showApiKeyModal(){document.getElementById('modContent').innerHTML='<h3>Set API Key OpenAI</h3><p style="margin-bottom:12px">Masukkan API key untuk mengaktifkan AI Chat. Tersimpan di perangkat saja.</p><div style="position:relative;margin-bottom:16px"><input type="password" id="oakInp" placeholder="sk-..." style="width:100%;padding:14px 50px 14px 16px;background:var(--glass);border:1px solid var(--gb);border-radius:var(--rx);color:var(--t1);font-size:12px;outline:none;letter-spacing:1px;font-family:Inter,sans-serif"><button id="oakEye" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--t3);cursor:pointer;padding:4px"><i class="fas fa-eye"></i></button></div><div style="font-size:11px;color:var(--t3);line-height:1.5;margin-bottom:20px">Dapatkan key di <strong style="color:var(--nb)">platform.openai.com/api-keys</strong></div><div class="moda"><button class="btn bs bsm" onclick="closeModal()">Batal</button><button class="btn bp bsm" id="oakSave">Simpan</button></div>';document.getElementById('oakEye').onclick=function(){var inp=document.getElementById('oakInp');inp.type=inp.type==='password'?'text':'password';this.querySelector('i').className=inp.type==='password'?'fas fa-eye':'fas fa-eye-slash';};document.getElementById('oakSave').onclick=function(){var k=document.getElementById('oakInp').value.trim();if(!k){toast('Masukkan API key','er');return;}oaiKey=k;localStorage.setItem('jg_oak',k);closeModal();toast('API Key disimpan!','ok');};document.getElementById('modalOv').classList.add('sh');}
 function showAbout(){document.getElementById('modContent').innerHTML='<div style="text-align:center;margin-bottom:16px"><div style="width:60px;height:60px;margin:0 auto 12px;background:var(--gm);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#000">JG</div><div style="font-family:Orbitron,sans-serif;font-weight:900;font-size:16px;background:var(--gm);-webkit-background-clip:text;-webkit-text-fill-color:transparent">JapaneseGo AI Premium</div><div style="font-size:11px;color:var(--t3);margin-top:4px">v2.0.0 — Smart Learning Japanese</div></div><div style="font-size:12px;color:var(--t2);line-height:1.7;text-align:left"><p>Platform pembelajaran bahasa Jepang berbasis AI untuk siswa SD, SMP, SMA, dan umum. 100% gratis.</p><p style="margin-top:8px">Fitur: Materi interaktif, Quiz, AI Chat, Audio Jepang, Leaderboard, Progress tracking.</p><p style="margin-top:8px;color:var(--t3)">&copy; 2024 JapaneseGo AI. Dibuat dengan <i class="fas fa-heart" style="color:#ff4757"></i> untuk pendidikan Indonesia.</p></div><div class="moda" style="margin-top:20px"><button class="btn bs bsm" onclick="closeModal()">Tutup</button></div>';document.getElementById('modalOv').classList.add('sh');}
 </script>
