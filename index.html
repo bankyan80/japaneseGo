@@ -1,1131 +1,371 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=none">
-  <title>Japanese Dictionary AI</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            neon: '#00d4ff',
-            violet: '#a855f7',
-            dark: { 900: '#06061a', 800: '#0c0c2a', 700: '#12123a' },
-            glass: 'rgba(255,255,255,0.04)',
-            glassBorder: 'rgba(255,255,255,0.08)'
-          },
-          fontFamily: {
-            logo: ['Chakra Petch', 'sans-serif'],
-            jp: ['Noto Sans JP', 'sans-serif']
-          }
-        }
-      }
-    }
-  </script>
-  <style>
-    :root {
-      --neon: #00d4ff;
-      --violet: #a855f7;
-      --dark: #06061a;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; overflow: hidden; }
-    body {
-      font-family: 'Noto Sans JP', 'Chakra Petch', sans-serif;
-      background: var(--dark);
-      color: #e2e8f0;
-    }
-
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(0,212,255,0.3); border-radius: 4px; }
-
-    #bgCanvas {
-      position: fixed; inset: 0; z-index: 0;
-      pointer-events: none;
-    }
-
-    .glass {
-      background: rgba(255,255,255,0.04);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-    .glass-strong {
-      background: rgba(255,255,255,0.07);
-      backdrop-filter: blur(32px);
-      -webkit-backdrop-filter: blur(32px);
-      border: 1px solid rgba(255,255,255,0.12);
-    }
-
-    .glow-neon { box-shadow: 0 0 20px rgba(0,212,255,0.15), 0 0 60px rgba(0,212,255,0.05); }
-    .glow-violet { box-shadow: 0 0 20px rgba(168,85,247,0.15), 0 0 60px rgba(168,85,247,0.05); }
-    .glow-text { text-shadow: 0 0 30px rgba(0,212,255,0.4); }
-
-    .gradient-border { position: relative; }
-    .gradient-border::before {
-      content: '';
-      position: absolute; inset: -1px;
-      border-radius: inherit;
-      background: linear-gradient(135deg, var(--neon), var(--violet));
-      z-index: -1;
-      opacity: 0.5;
-    }
-
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    @keyframes pulse-glow {
-      0%, 100% { box-shadow: 0 0 20px rgba(0,212,255,0.2); }
-      50% { box-shadow: 0 0 40px rgba(0,212,255,0.4), 0 0 80px rgba(168,85,247,0.15); }
-    }
-    @keyframes spin-ring { to { transform: rotate(360deg); } }
-    @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-8px); }
-    }
-    @keyframes shimmer {
-      0% { background-position: -200% 0; }
-      100% { background-position: 200% 0; }
-    }
-    @keyframes slideInRight {
-      from { opacity: 0; transform: translateX(20px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-    @keyframes toastIn {
-      from { opacity: 0; transform: translateY(-20px) scale(0.9); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-    @keyframes toastOut {
-      to { opacity: 0; transform: translateY(-20px) scale(0.9); }
-    }
-
-    .animate-fade-up { animation: fadeInUp 0.6s ease-out both; }
-    .animate-fade { animation: fadeIn 0.4s ease-out both; }
-    .animate-slide-right { animation: slideInRight 0.5s ease-out both; }
-    .animate-float { animation: float 3s ease-in-out infinite; }
-
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        transition-duration: 0.01ms !important;
-      }
-    }
-
-    .spinner {
-      width: 48px; height: 48px;
-      border: 3px solid rgba(0,212,255,0.15);
-      border-top-color: var(--neon);
-      border-right-color: var(--violet);
-      border-radius: 50%;
-      animation: spin-ring 0.8s linear infinite;
-    }
-
-    .skeleton {
-      background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-      border-radius: 8px;
-    }
-
-    .bottom-nav {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      z-index: 50;
-      padding: 6px 0;
-      padding-bottom: max(6px, env(safe-area-inset-bottom));
-    }
-    .nav-btn {
-      display: flex; flex-direction: column; align-items: center; gap: 2px;
-      padding: 8px 16px; border-radius: 12px;
-      color: #64748b; font-size: 11px; font-weight: 600;
-      transition: all 0.3s ease; border: none; background: none; cursor: pointer;
-      font-family: 'Chakra Petch', sans-serif;
-    }
-    .nav-btn i { font-size: 18px; transition: all 0.3s ease; }
-    .nav-btn.active { color: var(--neon); }
-    .nav-btn.active i { filter: drop-shadow(0 0 8px rgba(0,212,255,0.5)); }
-    .nav-btn:hover:not(.active) { color: #94a3b8; }
-
-    .speak-btn {
-      width: 36px; height: 36px;
-      border-radius: 50%;
-      border: 1px solid rgba(0,212,255,0.3);
-      background: rgba(0,212,255,0.1);
-      color: var(--neon);
-      cursor: pointer;
-      display: inline-flex; align-items: center; justify-content: center;
-      transition: all 0.3s ease;
-      flex-shrink: 0;
-    }
-    .speak-btn:hover {
-      background: rgba(0,212,255,0.2);
-      box-shadow: 0 0 15px rgba(0,212,255,0.3);
-      transform: scale(1.1);
-    }
-    .speak-btn.speaking { animation: pulse-glow 0.8s ease-in-out infinite; }
-
-    .quiz-opt {
-      padding: 12px 16px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.03);
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-align: left;
-      font-size: 14px;
-      color: #cbd5e1;
-      width: 100%;
-      display: flex; align-items: center; gap: 10px;
-    }
-    .quiz-opt:hover:not(:disabled) {
-      border-color: rgba(0,212,255,0.3);
-      background: rgba(0,212,255,0.05);
-    }
-    .quiz-opt.correct {
-      border-color: #10b981 !important;
-      background: rgba(16,185,129,0.15) !important;
-      color: #6ee7b7 !important;
-    }
-    .quiz-opt.wrong {
-      border-color: #ef4444 !important;
-      background: rgba(239,68,68,0.15) !important;
-      color: #fca5a5 !important;
-    }
-    .quiz-opt:disabled { cursor: default; opacity: 0.7; }
-    .quiz-opt .opt-label {
-      width: 28px; height: 28px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      background: rgba(255,255,255,0.06);
-      font-size: 12px; font-weight: 700;
-      flex-shrink: 0;
-      font-family: 'Chakra Petch', sans-serif;
-    }
-
-    .toast {
-      padding: 12px 20px;
-      border-radius: 12px;
-      font-size: 13px;
-      font-weight: 500;
-      animation: toastIn 0.3s ease-out;
-      display: flex; align-items: center; gap: 8px;
-      max-width: 340px;
-      pointer-events: auto;
-    }
-    .toast.out { animation: toastOut 0.3s ease-in forwards; }
-    .toast-success { background: rgba(16,185,129,0.2); border: 1px solid rgba(16,185,129,0.3); color: #6ee7b7; }
-    .toast-error { background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
-    .toast-info { background: rgba(0,212,255,0.2); border: 1px solid rgba(0,212,255,0.3); color: #7dd3fc; }
-
-    .fav-item {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 16px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.06);
-      background: rgba(255,255,255,0.02);
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-    .fav-item:hover {
-      border-color: rgba(168,85,247,0.3);
-      background: rgba(168,85,247,0.05);
-    }
-
-    .app-scroll {
-      height: 100vh;
-      overflow-y: auto;
-      padding-bottom: 90px;
-      scroll-behavior: smooth;
-    }
-
-    .contoh-card {
-      padding: 14px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.06);
-      background: rgba(255,255,255,0.02);
-      transition: all 0.3s ease;
-    }
-    .contoh-card:hover {
-      border-color: rgba(0,212,255,0.2);
-      background: rgba(0,212,255,0.03);
-    }
-
-    .google-btn {
-      display: flex; align-items: center; justify-content: center; gap: 12px;
-      padding: 14px 28px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.06);
-      color: #e2e8f0;
-      font-size: 15px; font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-family: 'Chakra Petch', sans-serif;
-    }
-    .google-btn:hover {
-      background: rgba(255,255,255,0.1);
-      border-color: rgba(255,255,255,0.2);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
-    }
-    .google-btn:active { transform: translateY(0); }
-
-    .tag {
-      display: inline-flex; align-items: center; gap: 4px;
-      padding: 4px 10px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 500;
-    }
-
-    input:focus, textarea:focus { outline: none; }
-    .hidden { display: none !important; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="theme-color" content="#0a0a1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="JapaneseGo AI Premium – Platform pembelajaran bahasa Jepang berbasis AI">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎌</text></svg>">
+<title>JapaneseGo AI Premium</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+JP:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root{--bg:#0a0a1a;--card:rgba(15,15,42,.7);--glass:rgba(255,255,255,.05);--gb:rgba(255,255,255,.1);--nb:#00d4ff;--np:#a855f7;--nc:#06ffd0;--nk:#ff006e;--t1:#fff;--t2:rgba(255,255,255,.7);--t3:rgba(255,255,255,.4);--gm:linear-gradient(135deg,#00d4ff,#a855f7,#06ffd0);--gc:linear-gradient(145deg,rgba(0,212,255,.1),rgba(168,85,247,.1));--sn:0 0 20px rgba(0,212,255,.3),0 0 60px rgba(168,85,247,.1);--r:16px;--rs:10px;--rx:6px;--tr:all .3s cubic-bezier(.4,0,.2,1)}
+.light{--bg:#f0f2ff;--card:rgba(255,255,255,.8);--glass:rgba(255,255,255,.6);--gb:rgba(0,0,0,.08);--t1:#1a1a2e;--t2:rgba(26,26,46,.7);--t3:rgba(26,26,46,.4);--gc:linear-gradient(145deg,rgba(0,212,255,.05),rgba(168,85,247,.05));--sn:0 4px 20px rgba(0,212,255,.15)}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Inter','Noto Sans JP',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;overflow-x:hidden;transition:background .3s,color .3s}
+.bfx{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.3;animation:of 20s ease-in-out infinite}
+.orb:nth-child(1){width:300px;height:300px;background:var(--nb);top:-100px;left:-50px}
+.orb:nth-child(2){width:250px;height:250px;background:var(--np);bottom:-80px;right:-40px;animation-delay:-7s}
+.orb:nth-child(3){width:200px;height:200px;background:var(--nc);top:50%;left:50%;transform:translate(-50%,-50%);animation-delay:-14s}
+@keyframes of{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(30px,-40px) scale(1.1)}50%{transform:translate(-20px,30px) scale(.9)}75%{transform:translate(40px,20px) scale(1.05)}}
+.light .orb{opacity:.1}
+.bgrid{position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+.light .bgrid{background-image:linear-gradient(rgba(0,0,0,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.03) 1px,transparent 1px)}
+.scr{display:none;position:relative;z-index:1;min-height:100vh;animation:fi .4s ease}.scr.on{display:flex;flex-direction:column}
+@keyframes fi{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes su{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes gl{0%,100%{box-shadow:0 0 5px var(--nb),0 0 20px rgba(0,212,255,.2)}50%{box-shadow:0 0 15px var(--nb),0 0 40px rgba(0,212,255,.4)}}
+@keyframes sp{to{transform:rotate(360deg)}}
+@keyframes tp{0%,60%,100%{opacity:.3}30%{opacity:1}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.ahdr{position:sticky;top:0;z-index:50;padding:12px 16px;background:var(--card);backdrop-filter:blur(20px);border-bottom:1px solid var(--gb);display:flex;align-items:center;justify-content:space-between}
+.alogo{font-family:'Orbitron',sans-serif;font-size:15px;font-weight:900;background:var(--gm);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hact{display:flex;align-items:center;gap:10px}
+.hbtn{width:36px;height:36px;border-radius:10px;background:var(--glass);border:1px solid var(--gb);color:var(--t1);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:var(--tr);font-size:14px}
+.hbtn:hover{border-color:var(--nb);color:var(--nb)}
+.uav{width:36px;height:36px;border-radius:10px;background:var(--gm);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#000;cursor:pointer}
+.bnav{position:fixed;bottom:0;left:0;right:0;z-index:50;background:var(--card);backdrop-filter:blur(20px);border-top:1px solid var(--gb);display:flex;padding:8px 0;padding-bottom:max(8px,env(safe-area-inset-bottom))}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0;cursor:pointer;transition:var(--tr);color:var(--t3);font-size:10px;font-weight:500;position:relative}
+.ni i{font-size:20px;transition:var(--tr)}.ni.on{color:var(--nb)}
+.ni.on::before{content:'';position:absolute;top:-8px;width:30px;height:3px;background:var(--gm);border-radius:0 0 3px 3px}
+.ni:hover{color:var(--nc)}
+.tc{display:none;padding:16px;padding-bottom:90px;animation:fi .3s ease}.tc.on{display:block}
+.cd{background:var(--card);backdrop-filter:blur(16px);border:1px solid var(--gb);border-radius:var(--r);padding:20px;transition:var(--tr)}
+.cd:hover{border-color:rgba(0,212,255,.3);box-shadow:0 4px 20px rgba(0,212,255,.1)}
+.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.scard{background:var(--card);backdrop-filter:blur(16px);border:1px solid var(--gb);border-radius:var(--rs);padding:16px 12px;text-align:center;transition:var(--tr)}
+.scard:hover{border-color:rgba(0,212,255,.3);transform:translateY(-2px)}
+.sico{font-size:22px;margin-bottom:6px}
+.sval{font-family:'Orbitron',sans-serif;font-size:20px;font-weight:700;background:var(--gm);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.slab{font-size:11px;color:var(--t3);margin-top:2px}
+.pbar{height:8px;background:var(--glass);border-radius:4px;overflow:hidden}
+.pfill{height:100%;background:var(--gm);border-radius:4px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.pcont{margin-bottom:20px}
+.phdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.phdr span{font-size:13px;font-weight:600}
+.phdr .pct{color:var(--nc);font-family:'Orbitron',sans-serif;font-size:12px}
+.stit{font-family:'Orbitron',sans-serif;font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.stit i{color:var(--nb)}
+.wsec{margin-bottom:20px;animation:su .4s ease}
+.wsec h2{font-size:22px;font-weight:700;margin-bottom:4px}
+.wsec .gr{color:var(--t2);font-size:14px}
+.qact{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px}
+.qab{background:var(--card);backdrop-filter:blur(16px);border:1px solid var(--gb);border-radius:var(--r);padding:18px 14px;cursor:pointer;transition:var(--tr);text-align:center}
+.qab:hover{border-color:var(--nb);transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,212,255,.1)}
+.qab i{font-size:24px;margin-bottom:8px;display:block}
+.qab span{font-size:13px;font-weight:600}
+.lsel{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.lbtn{padding:14px 8px;border-radius:var(--rs);background:var(--glass);border:2px solid var(--gb);color:var(--t1);cursor:pointer;transition:var(--tr);text-align:center;font-family:'Inter',sans-serif}
+.lbtn:hover{border-color:var(--nb)}
+.lbtn.on{border-color:var(--nb);background:rgba(0,212,255,.1);box-shadow:0 0 20px rgba(0,212,255,.15)}
+.lbtn .ln{font-weight:700;font-size:14px;margin-bottom:2px}
+.lbtn .ls{font-size:10px;color:var(--t3)}
+.mcard{background:var(--card);backdrop-filter:blur(16px);border:1px solid var(--gb);border-radius:var(--r);padding:16px;cursor:pointer;transition:var(--tr);display:flex;align-items:center;gap:14px;margin-bottom:10px}
+.mcard:hover{border-color:var(--nb);transform:translateX(4px);box-shadow:0 4px 20px rgba(0,212,255,.1)}
+.mico{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.minfo{flex:1}.minfo h4{font-size:14px;font-weight:600;margin-bottom:2px}.minfo p{font-size:11px;color:var(--t3)}
+.marr{color:var(--t3);font-size:14px}
+.mdet{display:none}.mdet.on{display:block}
+.bkb{display:inline-flex;align-items:center;gap:6px;color:var(--t2);font-size:13px;cursor:pointer;margin-bottom:16px;transition:var(--tr);background:none;border:none;font-family:'Inter',sans-serif}
+.bkb:hover{color:var(--nb)}
+.dt{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;margin-bottom:4px}
+.dsub{color:var(--t2);font-size:13px;margin-bottom:20px}
+.jtxt{font-family:'Noto Sans JP',sans-serif;font-size:28px;font-weight:700;text-align:center;padding:24px;margin-bottom:16px;background:var(--gc);border:1px solid var(--gb);border-radius:var(--r);line-height:1.8}
+.abtn{width:48px;height:48px;border-radius:50%;background:var(--gm);border:none;color:#000;font-size:18px;cursor:pointer;transition:var(--tr);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.abtn:hover{transform:scale(1.1);box-shadow:0 0 20px rgba(0,212,255,.5)}
+.ebox{background:var(--glass);border:1px solid var(--gb);border-radius:var(--rs);padding:16px;margin-bottom:10px}
+.ebox .jp{font-family:'Noto Sans JP',sans-serif;font-size:16px;font-weight:500;margin-bottom:4px}
+.ebox .ro{font-size:12px;color:var(--nc);margin-bottom:2px}
+.ebox .id{font-size:12px;color:var(--t2)}
+.ebox.ck{cursor:pointer;transition:var(--tr)}.ebox.ck:hover{border-color:var(--nb);background:rgba(0,212,255,.05)}
+.kgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:16px}
+.kitem{background:var(--glass);border:1px solid var(--gb);border-radius:var(--rx);padding:10px 4px;text-align:center;cursor:pointer;transition:var(--tr)}
+.kitem:hover{border-color:var(--nb);background:rgba(0,212,255,.1)}
+.kitem .ch{font-family:'Noto Sans JP',sans-serif;font-size:18px;font-weight:700}
+.kitem .rm{font-size:9px;color:var(--t3);margin-top:2px}
+.qcont{max-width:500px;margin:0 auto}
+.qhdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.qcnt{font-family:'Orbitron',sans-serif;font-size:13px;color:var(--nc)}
+.qsb{background:var(--gm);color:#000;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700}
+.qq{background:var(--card);backdrop-filter:blur(16px);border:1px solid var(--gb);border-radius:var(--r);padding:24px;text-align:center;margin-bottom:16px}
+.qq .ql{font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.qq .qt{font-family:'Noto Sans JP',sans-serif;font-size:32px;font-weight:700}
+.qopts{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.qopt{padding:16px;background:var(--glass);border:2px solid var(--gb);border-radius:var(--rs);color:var(--t1);font-size:15px;cursor:pointer;transition:var(--tr);text-align:left;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:12px}
+.qopt:hover{border-color:var(--nb);background:rgba(0,212,255,.05)}
+.qopt .ol{width:28px;height:28px;border-radius:8px;background:var(--glass);border:1px solid var(--gb);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.qopt.cor{border-color:var(--nc);background:rgba(6,255,208,.1)}.qopt.wrg{border-color:var(--nk);background:rgba(255,0,110,.1)}.qopt.dis{pointer-events:none;opacity:.6}
+.qfb{padding:12px 16px;border-radius:var(--rs);font-size:13px;font-weight:600;margin-bottom:16px;display:none;animation:su .3s ease}.qfb.sh{display:block}
+.qfb.cf{background:rgba(6,255,208,.1);border:1px solid rgba(6,255,208,.3);color:var(--nc)}
+.qfb.wf{background:rgba(255,0,110,.1);border:1px solid rgba(255,0,110,.3);color:var(--nk)}
+.qres{text-align:center;padding:40px 20px}.qres .ri{font-size:60px;margin-bottom:16px}.qres h3{font-family:'Orbitron',sans-serif;font-size:24px;margin-bottom:8px}.qres p{color:var(--t2);margin-bottom:24px}
+.chcont{display:flex;flex-direction:column;height:calc(100vh - 140px);max-width:600px;margin:0 auto}
+.chmsgs{flex:1;overflow-y:auto;padding-bottom:16px;scroll-behavior:smooth}
+.chmsgs::-webkit-scrollbar{width:4px}.chmsgs::-webkit-scrollbar-thumb{background:var(--gb);border-radius:2px}
+.chb{max-width:85%;padding:12px 16px;border-radius:16px;margin-bottom:8px;font-size:14px;line-height:1.6;animation:su .3s ease;word-break:break-word}
+.chb.ai{background:var(--card);backdrop-filter:blur(16px);border:1px solid var(--gb);border-bottom-left-radius:4px;margin-right:auto}
+.chb.us{background:linear-gradient(135deg,rgba(0,212,255,.2),rgba(168,85,247,.2));border:1px solid rgba(0,212,255,.3);border-bottom-right-radius:4px;margin-left:auto}
+.chb .sn{font-size:10px;font-weight:700;color:var(--nb);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.chb.us .sn{color:var(--np)}
+.chtyp{display:flex;gap:4px;padding:12px 16px}
+.chtyp span{width:8px;height:8px;border-radius:50%;background:var(--nb);animation:tp 1.4s infinite}
+.chtyp span:nth-child(2){animation-delay:.2s}.chtyp span:nth-child(3){animation-delay:.4s}
+.chin{display:flex;gap:8px;padding-top:12px;border-top:1px solid var(--gb)}
+.chin input{flex:1;padding:12px 16px;background:var(--glass);border:1px solid var(--gb);border-radius:24px;color:var(--t1);font-size:14px;outline:none;transition:var(--tr);font-family:'Inter',sans-serif}
+.chin input:focus{border-color:var(--nb)}
+.chsnd{width:44px;height:44px;border-radius:50%;background:var(--gm);border:none;color:#000;font-size:16px;cursor:pointer;transition:var(--tr);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.chsnd:hover{transform:scale(1.1)}
+.chhint{text-align:center;padding:40px 20px;color:var(--t3);font-size:13px}
+.chhint i{font-size:40px;margin-bottom:12px;display:block;color:var(--nb);opacity:.5}
+.lbl{display:flex;flex-direction:column;gap:8px}
+.lbi{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--card);backdrop-filter:blur(16px);border:1px solid var(--gb);border-radius:var(--rs);transition:var(--tr)}
+.lbi:hover{border-color:rgba(0,212,255,.3)}
+.lbr{font-family:'Orbitron',sans-serif;font-size:16px;font-weight:700;width:32px;text-align:center}
+.lbr.g{color:#ffd700}.lbr.s{color:#c0c0c0}.lbr.b{color:#cd7f32}
+.lba{width:40px;height:40px;border-radius:10px;background:var(--gm);display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;font-size:14px;flex-shrink:0}
+.lbinf{flex:1}.lbn{font-size:14px;font-weight:600}
+.lbsc{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:700;color:var(--nc)}
+.pfh{text-align:center;padding:20px 0;margin-bottom:20px}
+.pfal{width:80px;height:80px;border-radius:20px;background:var(--gm);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#000;margin:0 auto 12px;box-shadow:var(--sn)}
+.pfn{font-size:20px;font-weight:700}.pfe{font-size:13px;color:var(--t3)}
+.slist{display:flex;flex-direction:column;gap:8px}
+.sitem{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--card);backdrop-filter:blur(16px);border:1px solid var(--gb);border-radius:var(--rs);cursor:pointer;transition:var(--tr)}
+.sitem:hover{border-color:rgba(0,212,255,.3)}
+.sitem .si{font-size:18px;width:24px;text-align:center;color:var(--nb)}
+.sitem span{flex:1;font-size:14px;font-weight:500}
+.sitem .arr{color:var(--t3);font-size:12px}
+.strk{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:rgba(255,165,0,.15);border:1px solid rgba(255,165,0,.3);border-radius:20px;font-size:12px;font-weight:600;color:#ffa500}
+.logcard{background:var(--card);backdrop-filter:blur(20px);border:1px solid var(--gb);border-radius:24px;padding:50px 30px;max-width:420px;width:100%;text-align:center;box-shadow:var(--sn);animation:su .6s ease}
+.logcard h1{font-family:'Orbitron',sans-serif;font-size:24px;font-weight:900;background:var(--gm);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px}
+.logcard .sub{color:var(--t2);font-size:14px;margin-bottom:36px}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:16px;background:var(--glass);border:1px solid var(--gb);border-radius:var(--rs);color:var(--t1);font-size:15px;font-weight:500;cursor:pointer;transition:var(--tr);font-family:'Inter',sans-serif}
+.gbtn:hover{border-color:var(--nb);box-shadow:0 0 0 3px rgba(0,212,255,.1);transform:translateY(-2px)}
+.gbtn svg{width:22px;height:22px}
+.loghint{margin-top:20px;font-size:12px;color:var(--t3)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 28px;border:none;border-radius:var(--rs);font-size:14px;font-weight:600;cursor:pointer;transition:var(--tr);font-family:'Inter',sans-serif;text-decoration:none}
+.btn:active{transform:scale(.97)}
+.bp{background:var(--gm);color:#000;font-weight:700}.bp:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,212,255,.4)}
+.bs{background:var(--glass);border:1px solid var(--gb);color:var(--t1)}.bs:hover{border-color:var(--nb)}
+.bsm{padding:10px 18px;font-size:12px}.bb{width:100%}
+.mov{position:fixed;inset:0;background:rgba(10,10,26,.85);backdrop-filter:blur(8px);z-index:10000;display:none;align-items:center;justify-content:center;padding:20px}
+.mov.sh{display:flex}
+.mod{background:var(--card);backdrop-filter:blur(20px);border:1px solid var(--gb);border-radius:20px;padding:28px;max-width:440px;width:100%;animation:su .3s ease;max-height:85vh;overflow-y:auto}
+.mod h3{font-family:'Orbitron',sans-serif;font-size:18px;margin-bottom:12px}
+.mod p{color:var(--t2);font-size:13px;margin-bottom:20px;line-height:1.6}
+.moda{display:flex;gap:10px;justify-content:flex-end}
+.don-banner{background:linear-gradient(135deg,rgba(0,212,255,.08),rgba(168,85,247,.08));border:1px solid rgba(0,212,255,.2);border-radius:var(--r);padding:20px;margin-bottom:20px;position:relative;overflow:hidden}
+.don-banner::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:linear-gradient(45deg,transparent 40%,rgba(255,255,255,.03) 50%,transparent 60%);animation:shimmer 4s linear infinite;background-size:200% 100%}
+.don-banner-inner{position:relative;z-index:1;display:flex;align-items:center;gap:16px}
+.don-icon{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#108ee9,#0068b5);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;animation:float 3s ease-in-out infinite;box-shadow:0 4px 15px rgba(16,142,233,.4);color:#fff;font-weight:900;font-family:'Orbitron',sans-serif}
+.don-info{flex:1}.don-info h4{font-size:15px;font-weight:700;margin-bottom:4px}.don-info p{font-size:12px;color:var(--t2);line-height:1.5}
+.don-btn-sm{padding:10px 18px;background:linear-gradient(135deg,#108ee9,#0068b5);border:none;border-radius:var(--rx);color:#fff;font-size:12px;font-weight:700;cursor:pointer;transition:var(--tr);white-space:nowrap;font-family:'Inter',sans-serif}
+.don-btn-sm:hover{transform:translateY(-2px);box-shadow:0 4px 15px rgba(16,142,233,.4)}
+.don-close{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--t3);cursor:pointer;font-size:14px;z-index:2;padding:4px;transition:var(--tr)}.don-close:hover{color:var(--t1)}
+.don-card{text-align:center}
+.don-logo{width:72px;height:72px;margin:0 auto 16px;background:linear-gradient(135deg,#108ee9,#0068b5);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:34px;box-shadow:0 8px 25px rgba(16,142,233,.4);animation:float 3s ease-in-out infinite;color:#fff;font-weight:900;font-family:'Orbitron',sans-serif}
+.don-amt{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}
+.don-amt-btn{padding:12px 8px;background:var(--glass);border:2px solid var(--gb);border-radius:var(--rx);color:var(--t1);font-size:14px;font-weight:700;cursor:pointer;transition:var(--tr);font-family:'Orbitron',sans-serif}
+.don-amt-btn:hover{border-color:var(--nb)}.don-amt-btn.on{border-color:#108ee9;background:rgba(16,142,233,.1)}
+.don-dana-info{background:rgba(16,142,233,.08);border:1px solid rgba(16,142,233,.2);border-radius:var(--rx);padding:14px;margin-bottom:20px;text-align:left}
+.don-dana-info .dlbl{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:700}
+.don-dana-info .dval{font-family:'Orbitron',sans-serif;font-size:16px;font-weight:700;color:#108ee9;letter-spacing:2px}
+.don-dana-info .dnm{font-size:12px;color:var(--t2);margin-top:4px}
+.don-pay-btn{width:100%;padding:16px;background:linear-gradient(135deg,#108ee9,#0068b5);border:none;border-radius:var(--rs);color:#fff;font-size:15px;font-weight:700;cursor:pointer;transition:var(--tr);display:flex;align-items:center;justify-content:center;gap:10px;font-family:'Inter',sans-serif}
+.don-pay-btn:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(16,142,233,.4)}
+.don-note{margin-top:14px;font-size:11px;color:var(--t3);line-height:1.5}
+.oban{display:none;background:rgba(255,165,0,.12);border:1px solid rgba(255,165,0,.25);border-radius:var(--rx);padding:8px 16px;font-size:12px;color:#ffa500;text-align:center;margin-bottom:12px}.oban.sh{display:block}
+.tcon{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:10001;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.tst{background:var(--card);backdrop-filter:blur(20px);border:1px solid var(--gb);border-radius:var(--rs);padding:12px 20px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:10px;animation:su .3s ease;pointer-events:auto;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis}
+.tst.ok{border-color:rgba(6,255,208,.3)}.tst.ok i{color:var(--nc)}
+.tst.er{border-color:rgba(255,0,110,.3)}.tst.er i{color:var(--nk)}
+.tst.inf{border-color:rgba(0,212,255,.3)}.tst.inf i{color:var(--nb)}
+.lov{position:fixed;inset:0;background:rgba(10,10,26,.85);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:16px}.lov.sh{display:flex}.lot{font-size:14px;color:var(--t2)}
+.spin{width:24px;height:24px;border:3px solid var(--gb);border-top-color:var(--nb);border-radius:50%;animation:sp .8s linear infinite}
+.fb-err{background:rgba(255,0,110,.1);border:1px solid rgba(255,0,110,.25);border-radius:var(--rx);padding:10px 14px;font-size:12px;color:var(--nk);margin-top:12px;display:none;text-align:left;line-height:1.5}.fb-err.sh{display:block}
+@media(max-width:380px){.sgrid{gap:6px}.scard{padding:12px 8px}.sval{font-size:16px}.kgrid{gap:4px}.kitem{padding:8px 2px}.kitem .ch{font-size:15px}.don-amt{grid-template-columns:repeat(2,1fr)}.don-banner-inner{flex-direction:column;text-align:center}.mod{padding:22px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
 </head>
 <body>
-  <canvas id="bgCanvas"></canvas>
+<div class="bfx"><div class="orb"></div><div class="orb"></div><div class="orb"></div></div>
+<div class="bgrid"></div>
+<div class="tcon" id="toastCon"></div>
+<div class="lov" id="loadOv"><div class="spin"></div><div class="lot">Memuat...</div></div>
+<div class="mov" id="modalOv" onclick="if(event.target===this)closeModal()"><div class="mod" id="modContent"></div></div>
 
-  <!-- ======== LOGIN PAGE ======== -->
-  <section id="loginPage" class="fixed inset-0 z-40 flex items-center justify-center px-4">
-    <div class="glass-strong rounded-3xl p-8 sm:p-10 w-full max-w-sm text-center animate-fade-up glow-neon">
-      <div class="mb-2 animate-float">
-        <div class="text-5xl sm:text-6xl font-logo font-bold bg-gradient-to-r from-neon to-violet bg-clip-text text-transparent glow-text leading-tight">
-          日辞AI
-        </div>
-      </div>
-      <p class="text-sm text-slate-400 mb-1 font-logo tracking-wider">JAPANESE DICTIONARY AI</p>
-      <p class="text-xs text-slate-500 mb-8">Kamus cerdas berbasis AI untuk bahasa Jepang</p>
-      <div class="h-px w-full bg-gradient-to-r from-transparent via-neon/30 to-transparent mb-8"></div>
-      <button id="googleLoginBtn" class="google-btn w-full">
-        <svg width="20" height="20" viewBox="0 0 24 24">
-          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
-          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-        </svg>
-        Masuk dengan Google
-      </button>
-      <p class="text-[10px] text-slate-600 mt-6">Dengan masuk, Anda menyetujui penggunaan data sesuai kebijakan privasi</p>
-    </div>
-  </section>
+<div class="scr on" id="logS" style="justify-content:center;align-items:center;padding:20px">
+<div class="logcard">
+<div style="width:80px;height:80px;margin:0 auto 20px;background:var(--gm);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:36px;animation:gl 3s ease-in-out infinite"><i class="fas fa-torii-gate"></i></div>
+<h1>JapaneseGo AI</h1>
+<p class="sub">Smart Learning Japanese</p>
+<button class="gbtn" onclick="googleLogin()">
+<svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A10.96 10.96 0 001 12c0 1.77.42 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+Masuk dengan Google
+</button>
+<div class="fb-err" id="fbErr"></div>
+<button class="btn bs bb" style="margin-top:10px" onclick="guestLogin()"><i class="fas fa-user-secret"></i> Masuk Tamu (Offline)</button>
+<p class="loghint">Data tersimpan otomatis di cloud &amp; lokal</p>
+</div>
+</div>
 
-  <!-- ======== DASHBOARD ======== -->
-  <section id="dashboard" class="hidden relative z-10">
-    <div class="app-scroll">
-      <!-- Header -->
-      <header class="glass sticky top-0 z-30 px-4 py-3" style="border-bottom:1px solid rgba(255,255,255,0.06)">
-        <div class="max-w-lg mx-auto flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <img id="userAvatar" src="" alt="Avatar" class="w-9 h-9 rounded-full border-2 border-neon/30 object-cover">
-            <div>
-              <p id="userName" class="text-sm font-bold text-white leading-tight truncate max-w-[140px]"></p>
-              <p class="text-[10px] text-neon/70 font-logo tracking-wider">JAPANESE DICTIONARY AI</p>
-            </div>
-          </div>
-          <button id="logoutBtn" class="w-9 h-9 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center text-slate-400 hover:text-red-400 hover:border-red-400/30 transition-all text-sm" aria-label="Keluar">
-            <i class="fas fa-sign-out-alt"></i>
-          </button>
-        </div>
-      </header>
+<div class="scr" id="mainA">
+<header class="ahdr"><div class="alogo">JapaneseGo</div><div class="hact"><div class="strk"><i class="fas fa-fire"></i> <span id="streakNum">1</span></div><button class="hbtn" onclick="toggleTheme()" aria-label="Toggle tema"><i class="fas fa-moon" id="themeIcon"></i></button><div class="uav" id="userAv" onclick="switchTab('profile')" aria-label="Profil"></div></div></header>
+<div class="oban" id="offBan"><i class="fas fa-wifi"></i> Mode offline aktif — data tersimpan lokal</div>
+<div class="tc on" id="tabHome">
+<div class="wsec"><h2 id="welName">Halo!</h2><div class="gr">Ayo lanjutkan belajar Jepang hari ini</div></div>
+<div class="don-banner" id="donBanner"><button class="don-close" onclick="closeDonBanner()" aria-label="Tutup"><i class="fas fa-times"></i></button><div class="don-banner-inner"><div class="don-icon">D</div><div class="don-info"><h4>Dukung JapaneseGo AI</h4><p>Aplikasi ini gratis. Dukung pengembangan dengan donasi via DANA.</p></div><button class="don-btn-sm" onclick="openDonasi()"><i class="fas fa-heart"></i> Donasi</button></div></div>
+<div class="sgrid"><div class="scard"><div class="sico"><i class="fas fa-star" style="color:#ffd700"></i></div><div class="sval" id="hScore">0</div><div class="slab">Skor</div></div><div class="scard"><div class="sico"><i class="fas fa-layer-group" style="color:var(--np)"></i></div><div class="sval" id="hLevel">SD</div><div class="slab">Level</div></div><div class="scard"><div class="sico"><i class="fas fa-check-circle" style="color:var(--nc)"></i></div><div class="sval" id="hDone">0</div><div class="slab">Selesai</div></div></div>
+<div class="pcont"><div class="phdr"><span>Progress Belajar</span><span class="pct" id="hPct">0%</span></div><div class="pbar"><div class="pfill" id="hPfill" style="width:0%"></div></div></div>
+<div class="stit"><i class="fas fa-bolt"></i> Akses Cepat</div>
+<div class="qact"><div class="qab" onclick="switchTab('learn')"><i class="fas fa-book-open" style="color:var(--nb)"></i><span>Belajar</span></div><div class="qab" onclick="startQuiz()"><i class="fas fa-brain" style="color:var(--np)"></i><span>Quiz</span></div><div class="qab" onclick="switchTab('chat')"><i class="fas fa-robot" style="color:var(--nc)"></i><span>AI Chat</span></div><div class="qab" onclick="switchTab('leaderboard')"><i class="fas fa-trophy" style="color:#ffd700"></i><span>Leaderboard</span></div></div>
+<div class="stit"><i class="fas fa-chart-line"></i> Aktivitas Terkini</div>
+<div class="cd" id="activityLog"><p style="color:var(--t3);font-size:13px;text-align:center;padding:10px">Belum ada aktivitas</p></div>
+</div>
+<div class="tc" id="tabLearn">
+<div class="stit" id="learnTit"><i class="fas fa-graduation-cap"></i> Pilih Level</div>
+<div class="lsel" id="levelSel"><div class="lbtn on" data-lv="SD" onclick="selectLevel('SD')"><div class="ln">SD</div><div class="ls">Beginner</div></div><div class="lbtn" data-lv="SMP" onclick="selectLevel('SMP')"><div class="ln">SMP</div><div class="ls">Intermediate</div></div><div class="lbtn" data-lv="SMA" onclick="selectLevel('SMA')"><div class="ln">SMA</div><div class="ls">Advanced</div></div></div>
+<div id="matList"></div><div class="mdet" id="matDetail"></div>
+</div>
+<div class="tc" id="tabQuiz">
+<div id="quizArea"><div class="stit"><i class="fas fa-brain"></i> Quiz Bahasa Jepang</div><p style="color:var(--t2);font-size:13px;margin-bottom:20px">Uji pemahamanmu sesuai level saat ini</p><div class="qact"><div class="qab" onclick="startQuiz()"><i class="fas fa-play" style="color:var(--nc)"></i><span>Mulai Quiz</span></div><div class="qab" onclick="switchTab('learn')"><i class="fas fa-book" style="color:var(--nb)"></i><span>Belajar Dulu</span></div></div><div class="cd" style="text-align:center"><i class="fas fa-clipboard-question" style="font-size:40px;color:var(--nb);opacity:.5;margin-bottom:12px;display:block"></i><p style="color:var(--t3);font-size:13px">10 soal pilihan ganda<br>Skor otomatis ditambahkan ke progress</p></div></div>
+<div id="quizPlay" style="display:none"></div>
+</div>
+<div class="tc" id="tabChat"><div class="chcont"><div class="chmsgs" id="chatMsgs"><div class="chhint" id="chatHint"><i class="fas fa-robot"></i>Tanyakan apa saja tentang bahasa Jepang<br>Contoh: "Apa arti ありがとう?" atau "Ajarkan te-form"</div></div><div class="chin"><input type="text" id="chatIn" placeholder="Ketik pertanyaan..." onkeydown="if(event.key==='Enter')sendChat()"><button class="chsnd" onclick="sendChat()" aria-label="Kirim"><i class="fas fa-paper-plane"></i></button></div></div></div>
+<div class="tc" id="tabLeaderboard"><div class="stit"><i class="fas fa-trophy"></i> Leaderboard Global</div><p style="color:var(--t2);font-size:13px;margin-bottom:16px">Peringkat siswa dengan skor tertinggi</p><div class="lbl" id="lbList"><div class="cd" style="text-align:center;padding:40px"><div class="spin" style="margin:0 auto 12px"></div><p style="color:var(--t3);font-size:13px">Memuat leaderboard...</p></div></div></div>
+<div class="tc" id="tabProfile"><div class="pfh"><div class="pfal" id="pAvatar">?</div><div class="pfn" id="pName">Pengguna</div><div class="pfe" id="pEmail">-</div></div><div class="slist"><div class="sitem" onclick="openDonasi()"><i class="fas fa-heart si" style="color:#ff4757"></i><span>Donasi via DANA</span><span class="arr"><i class="fas fa-chevron-right"></i></span></div><div class="sitem" onclick="showApiKeyModal()"><i class="fas fa-key si"></i><span>Set API Key OpenAI</span><span class="arr"><i class="fas fa-chevron-right"></i></span></div><div class="sitem" onclick="resetProgress()"><i class="fas fa-rotate-left si"></i><span>Reset Progress</span><span class="arr"><i class="fas fa-chevron-right"></i></span></div><div class="sitem" onclick="showAbout()"><i class="fas fa-info-circle si"></i><span>Tentang Aplikasi</span><span class="arr"><i class="fas fa-chevron-right"></i></span></div><div class="sitem" style="border-color:rgba(255,0,110,.2)" onclick="doLogout()"><i class="fas fa-sign-out-alt si" style="color:var(--nk)"></i><span style="color:var(--nk)">Keluar</span><span class="arr"><i class="fas fa-chevron-right"></i></span></div></div></div>
+<nav class="bnav" aria-label="Navigasi utama"><div class="ni on" data-t="home" onclick="switchTab('home')"><i class="fas fa-home"></i><span>Home</span></div><div class="ni" data-t="learn" onclick="switchTab('learn')"><i class="fas fa-book-open"></i><span>Belajar</span></div><div class="ni" data-t="quiz" onclick="switchTab('quiz')"><i class="fas fa-brain"></i><span>Quiz</span></div><div class="ni" data-t="chat" onclick="switchTab('chat')"><i class="fas fa-robot"></i><span>AI Chat</span></div><div class="ni" data-t="leaderboard" onclick="switchTab('leaderboard')"><i class="fas fa-trophy"></i><span>Rank</span></div></nav>
+</div>
 
-      <div class="max-w-lg mx-auto px-4 pt-5">
+<script>
+var FBC={apiKey:"AIzaSyBAAqRc86lTdgeNcyi8y38iPM_kQ2MlV8I",authDomain:"smart-ai-afc4a.firebaseapp.com",databaseURL:"https://smart-ai-afc4a-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"smart-ai-afc4a",storageBucket:"smart-ai-afc4a.firebasestorage.app",messagingSenderId:"201179853408",appId:"1:201179853408:web:e41e86793d1ca73a198905",measurementId:"G-16QQW7CB16"};
 
-        <!-- ===== SEARCH TAB ===== -->
-        <div id="searchTab" class="tab-content">
-          <div class="relative mb-5 animate-fade-up">
-            <div id="searchBoxWrap" class="flex items-center gap-2 p-2 rounded-2xl glass-strong glow-neon transition-shadow duration-300">
-              <div class="flex-1 flex items-center gap-3 px-3">
-                <i class="fas fa-search text-neon/60 text-sm"></i>
-                <input type="text" id="searchInput" placeholder="Cari kata: Indonesia, Jepang, Romaji..."
-                  class="w-full bg-transparent text-white text-sm placeholder:text-slate-500 py-2" autocomplete="off">
-              </div>
-              <button id="searchBtn"
-                class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-neon to-violet text-dark-900 font-logo font-bold text-sm hover:opacity-90 transition-opacity flex-shrink-0">
-                Cari
-              </button>
-            </div>
-          </div>
+/* ===== DATA DANA — Sudah diupdate ===== */
+var DANA_NUM='081321592990';
+var DANA_NM='Yanuar Hidyat';
 
-          <div id="suggestions" class="flex flex-wrap gap-2 mb-5 animate-fade-up" style="animation-delay:0.1s">
-            <button class="suggest-btn tag bg-neon/10 text-neon border border-neon/20 hover:bg-neon/20 transition-colors" data-q="ありがとう">ありがとう</button>
-            <button class="suggest-btn tag bg-violet/10 text-violet border border-violet/20 hover:bg-violet/20 transition-colors" data-q="terima kasih">terima kasih</button>
-            <button class="suggest-btn tag bg-neon/10 text-neon border border-neon/20 hover:bg-neon/20 transition-colors" data-q="sakura">sakura</button>
-            <button class="suggest-btn tag bg-violet/10 text-violet border border-violet/20 hover:bg-violet/20 transition-colors" data-q="makan">makan</button>
-            <button class="suggest-btn tag bg-neon/10 text-neon border border-neon/20 hover:bg-neon/20 transition-colors" data-q="一生懸命">一生懸命</button>
-          </div>
+var MAT={
+SD:[{id:'hiragana',title:'Hiragana',desc:'Huruf dasar bahasa Jepang',icon:'⬛',bg:'linear-gradient(135deg,#ff6b6b,#ee5a24)',c:{chars:[['あ','a'],['い','i'],['う','u'],['え','e'],['お','o'],['か','ka'],['き','ki'],['く','ku'],['け','ke'],['こ','ko'],['さ','sa'],['し','shi'],['す','su'],['せ','se'],['そ','so'],['た','ta'],['ち','chi'],['つ','tsu'],['て','te'],['と','to'],['な','na'],['に','ni'],['ぬ','nu'],['ね','ne'],['の','no'],['は','ha'],['ひ','hi'],['ふ','fu'],['へ','he'],['ほ','ho'],['ま','ma'],['み','mi'],['む','mu'],['め','me'],['も','mo'],['や','ya'],['ゆ','yu'],['よ','yo'],['ら','ra'],['り','ri'],['る','ru'],['れ','re'],['ろ','ro'],['わ','wa'],['を','wo'],['ん','n']],ex:[{jp:'あさごはん',ro:'asagohan',id:'Sarapan'},{jp:'こんにちは',ro:'konnichiwa',id:'Selamat siang'},{jp:'ありがとう',ro:'arigatou',id:'Terima kasih'}]}},{id:'katakana',title:'Katakana',desc:'Huruf untuk kata serapan asing',icon:'🔶',bg:'linear-gradient(135deg,#00d4ff,#0984e3)',c:{chars:[['ア','a'],['イ','i'],['ウ','u'],['エ','e'],['オ','o'],['カ','ka'],['キ','ki'],['ク','ku'],['ケ','ke'],['コ','ko'],['サ','sa'],['シ','shi'],['ス','su'],['セ','se'],['ソ','so'],['タ','ta'],['チ','chi'],['ツ','tsu'],['テ','te'],['ト','to'],['ナ','na'],['ニ','ni'],['ヌ','nu'],['ネ','ne'],['ノ','no'],['ハ','ha'],['ヒ','hi'],['フ','fu'],['ヘ','he'],['ホ','ho'],['マ','ma'],['ミ','mi'],['ム','mu'],['メ','me'],['モ','mo'],['ヤ','ya'],['ユ','yu'],['ヨ','yo'],['ラ','ra'],['リ','ri'],['ル','ru'],['レ','re'],['ロ','ro'],['ワ','wa'],['ヲ','wo'],['ン','n']],ex:[{jp:'テレビ',ro:'terebi',id:'Televisi'},{jp:'パソコン',ro:'pasokon',id:'Komputer'},{jp:'スマホ',ro:'sumaho',id:'Smartphone'}]}},{id:'kosakata',title:'Kosakata Dasar',desc:'Kata-kata penting sehari-hari',icon:'📝',bg:'linear-gradient(135deg,#a855f7,#7c3aed)',c:{words:[{jp:'水',ro:'mizu',id:'Air'},{jp:'食べる',ro:'taberu',id:'Makan'},{jp:'飲む',ro:'nomu',id:'Minum'},{jp:'本',ro:'hon',id:'Buku'},{jp:'学校',ro:'gakkou',id:'Sekolah'},{jp:'先生',ro:'sensei',id:'Guru'},{jp:'友達',ro:'tomodachi',id:'Teman'},{jp:'大好き',ro:'daisuki',id:'Suka sekali'},{jp:'家族',ro:'kazoku',id:'Keluarga'},{jp:'犬',ro:'inu',id:'Anjing'},{jp:'猫',ro:'neko',id:'Kucing'},{jp:'天気',ro:'tenki',id:'Cuaca'}]}},{id:'salam',title:'Salam Jepang',desc:'Percakapan sederhana sehari-hari',icon:'🙇',bg:'linear-gradient(135deg,#06ffd0,#00b894)',c:{greet:[{jp:'おはようございます',ro:'ohayou gozaimasu',id:'Selamat pagi (formal)'},{jp:'こんにちは',ro:'konnichiwa',id:'Selamat siang'},{jp:'こんばんは',ro:'konbanwa',id:'Selamat malam'},{jp:'さようなら',ro:'sayounara',id:'Selamat tinggal'},{jp:'ありがとうございます',ro:'arigatou gozaimasu',id:'Terima kasih (formal)'},{jp:'すみません',ro:'sumimasen',id:'Permisi / Maaf'},{jp:'はじめまして',ro:'hajimemashite',id:'Senang berkenalan'},{jp:'おやすみなさい',ro:'oyasuminasai',id:'Selamat tidur'}]}}],
+SMP:[{id:'partikel',title:'Partikel Dasar',desc:'は, の, を, に, で, と',icon:'📌',bg:'linear-gradient(135deg,#ff6b6b,#ee5a24)',c:{particles:[{p:'は (wa)',fn:'Menandai topik kalimat',ex:'私は学生です。= Saya adalah murid.'},{p:'の (no)',fn:'Menunjukkan kepemilikan',ex:'私の本 = Buku saya'},{p:'を (wo)',fn:'Menandai objek langsung',ex:'パンを食べます。= Makan roti.'},{p:'に (ni)',fn:'Menunjukkan arah/waktu',ex:'学校に行きます。= Pergi ke sekolah.'},{p:'で (de)',fn:'Menunjukkan alat/tempat aksi',ex:'ペンで書きます。= Menulis dengan pulpen.'},{p:'と (to)',fn:'Dan / bersama',ex:'友達と遊びます。= Bermain dengan teman.'}]}},{id:'kalimat',title:'Kalimat Sederhana',desc:'Pola kalimat dasar Jepang',icon:'💬',bg:'linear-gradient(135deg,#00d4ff,#0984e3)',c:{patterns:[{t:'A は B です',d:'A adalah B',ex:'私は日本人です。= Saya orang Jepang.'},{t:'A は B じゃありません',d:'A bukan B',ex:'私は先生じゃありません。= Saya bukan guru.'},{t:'A は B ですか',d:'Apakah A adalah B?',ex:'学生ですか。= Apakah kamu murid?'},{t:'Noun を Verb-masu',d:'Objek + kata kerja',ex:'本を読みます。= Membaca buku.'},{t:'時間に Verb-masu',d:'Waktu + kata kerja',ex:'7時に起きます。= Bangun jam 7.'}]}},{id:'kanji_sd',title:'Kanji Dasar',desc:'Kanji level dasar JLPT N5',icon:'漢',bg:'linear-gradient(135deg,#a855f7,#7c3aed)',c:{kanji:[{k:'日',on:'ニチ/ジツ',kun:'ひ/か',mn:'Hari',ex:'日本 = Jepang'},{k:'月',on:'ゲツ/ガツ',kun:'つき',mn:'Bulan',ex:'月曜日 = Hari Senin'},{k:'火',on:'カ',kun:'ひ',mn:'Api',ex:'火曜日 = Hari Selasa'},{k:'水',on:'スイ',kun:'みず',mn:'Air',ex:'水曜日 = Hari Rabu'},{k:'木',on:'モク/ボク',kun:'き',mn:'Pohon',ex:'木曜日 = Hari Kamis'},{k:'金',on:'キン/コン',kun:'かね',mn:'Emas/Uang',ex:'金曜日 = Hari Jumat'},{k:'土',on:'ド/ト',kun:'つち',mn:'Tanah',ex:'土曜日 = Hari Sabtu'},{k:'人',on:'ジン/ニン',kun:'ひと',mn:'Orang',ex:'日本人 = Orang Jepang'},{k:'大',on:'ダイ/タイ',kun:'おお',mn:'Besar',ex:'大学 = Universitas'},{k:'小',on:'ショウ',kun:'ちい',mn:'Kecil',ex:'小学校 = SD'}]}}],
+SMA:[{id:'teform',title:'Te-Form',desc:'Bentuk dasar untuk pola kalimat',icon:'🔄',bg:'linear-gradient(135deg,#ff6b6b,#ee5a24)',c:{rules:[{r:'Verb u → って',ex:'買う → 買って',mn:'Membeli'},{r:'Verb ku → いて',ex:'書く → 書いて',mn:'Menulis'},{r:'Verb mu → んで',ex:'飲む → 飲んで',mn:'Minum'},{r:'Verb ru → って',ex:'散る → 散って',mn:'Jatuh'},{r:'Verb tsu → って',ex:'待つ → 待って',mn:'Menunggu'},{r:'Verb nu → んで',ex:'死ぬ → 死んで',mn:'Mati'},{r:'Verb bu → んで',ex:'遊ぶ → 遊んで',mn:'Bermain'},{r:'Verb masu → て',ex:'食べます → 食べて',mn:'Makan'},{r:'する → して',ex:'勉強する → 勉強して',mn:'Belajar'},{r:'くる → きて',ex:'来ます → 来て',mn:'Datang'}],use:[{p:'~てください',ex:'ここに座ってください。= Silakan duduk di sini.'},{p:'~ている',ex:'今勉強しています。= Sedang belajar sekarang.'},{p:'~てから',ex:'ご飯を食べてから、勉強します。= Belajar setelah makan.'}]}},{id:'past_neg',title:'Past & Negative',desc:'Bentuk lampau dan negatif',icon:'⏪',bg:'linear-gradient(135deg,#00d4ff,#0984e3)',c:{past:[{r:'Noun でした',ex:'学生でした。= (Dulu) adalah murid.'},{r:'Verb-mashita',ex:'本を読みました。= Membaca buku (lampau).'},{r:'い-adj かった',ex:'暑かったです。= (Dulu) panas.'},{r:'な-adj だった',ex:'静かだったです。= (Dulu) tenang.'}],neg:[{r:'Noun じゃありません',ex:'学生じゃありません。= Bukan murid.'},{r:'Verb-masen',ex:'食べません。= Tidak makan.'},{r:'い-adj くない',ex:'高くないです。= Tidak mahal.'},{r:'な-adj じゃない',ex:'簡単じゃないです。= Tidak mudah.'}]}},{id:'percakapan',title:'Percakapan Lanjutan',desc:'Dialog situasional',icon:'🗣️',bg:'linear-gradient(135deg,#a855f7,#7c3aed)',c:{dialogs:[{title:'Di Toko',lines:[{jp:'いらっしゃいませ。',id:'Selamat datang.',sp:'Pelayan'},{jp:'この本はいくらですか。',id:'Buku ini berapa?',sp:'Pembeli'},{jp:'千五百円です。',id:'1500 yen.',sp:'Pelayan'},{jp:'じゃあ、これをください。',id:'Saya ambil ini.',sp:'Pembeli'}]},{title:'Di Stasiun',lines:[{jp:'東京行きの電車は何番線ですか。',id:'Kereta ke Tokyo jalur berapa?',sp:'A'},{jp:'3番線です。',id:'Jalur 3.',sp:'B'},{jp:'いつ来ますか。',id:'Kapan datang?',sp:'A'},{jp:'あと5分です。',id:'Lagi 5 menit.',sp:'B'}]}]}},{id:'reading',title:'Reading Comprehension',desc:'Latihan membaca teks Jepang',icon:'📖',bg:'linear-gradient(135deg,#06ffd0,#00b894)',c:{texts:[{title:'自己紹介',text:'私の名前は田中です。東京の大学の学生です。専攻は日本語です。趣味は読書と料理です。週末はよく友達と一緒に映画を見に行きます。',reading:'Watashi no namae wa Tanaka desu. Toukyou no daigaku no gakusei desu.',meaning:'Nama saya Tanaka. Saya mahasiswa universitas di Tokyo. Jurusan saya bahasa Jepang. Hobi saya membaca dan memasak. Akhir pekan saya sering pergi nonton film bersama teman.'}]}}]};
 
-          <!-- Loading Skeleton -->
-          <div id="skeletonArea" class="hidden space-y-4 mb-5">
-            <div class="glass rounded-2xl p-5 space-y-3">
-              <div class="skeleton h-8 w-2/3"></div>
-              <div class="skeleton h-4 w-full"></div>
-              <div class="skeleton h-4 w-4/5"></div>
-              <div class="skeleton h-4 w-3/5"></div>
-            </div>
-            <div class="glass rounded-2xl p-5 space-y-3">
-              <div class="skeleton h-5 w-1/3"></div>
-              <div class="skeleton h-12 w-full"></div>
-              <div class="skeleton h-12 w-full"></div>
-            </div>
-          </div>
+var QZ={
+SD:[{q:'あ',o:['a','i','u','e'],a:0,f:'あ dibaca "a"'},{q:'さ',o:['sa','ta','ka','na'],a:0,f:'さ dibaca "sa"'},{q:'こんにちは',o:['Selamat pagi','Selamat siang','Selamat malam','Sampai jumpa'],a:1,f:'こんにちは = Selamat siang'},{q:'ありがとう',o:['Permisi','Maaf','Terima kasih','Tolong'],a:2,f:'ありがとう = Terima kasih'},{q:'猫',o:['Inu','Neko','Tori','Sakana'],a:1,f:'猫 = Neko (Kucing)'},{q:'水',o:['Mizu','Sora','Yama','Hana'],a:0,f:'水 = Mizu (Air)'},{q:'おはようございます',o:['Selamat malam','Selamat siang','Selamat pagi','Selamat tidur'],a:2,f:'= Selamat pagi formal'},{q:'テレビ',o:['Radio','Televisi','Komputer','Telepon'],a:1,f:'テレビ = Televisi'},{q:'学校',o:['Rumah','Toko','Sekolah','Kantor'],a:2,f:'学校 = Gakkou (Sekolah)'},{q:'え',o:['a','i','u','e'],a:3,f:'え dibaca "e"'}],
+SMP:[{q:'Partikel "は" berfungsi sebagai?',o:['Objek langsung','Topik kalimat','Kepemilikan','Arah'],a:1,f:'は menandai topik kalimat'},{q:'私の本 → Artinya?',o:['Buku saya','Buku kamu','Buku guru','Buku itu'],a:0,f:'の menunjukkan kepemilikan'},{q:'パンを食べます → Artinya?',o:['Minum roti','Beli roti','Makan roti','Buat roti'],a:2,f:'を menandai objek'},{q:'学校に行きます → Artinya?',o:['Pergi dari sekolah','Pergi ke sekolah','Keluar sekolah','Di sekolah'],a:1,f:'に menunjukkan arah'},{q:'金曜日 → Hari apa?',o:['Senin','Rabu','Jumat','Sabtu'],a:2,f:'金 = Emas → Jumat'},{q:'友達と遊びます → Artinya?',o:['Bermain sendiri','Bermain dengan teman','Melihat teman','Mencari teman'],a:1,f:'と = bersama'},{q:'ペンで書きます → Artinya?',o:['Menulis pulpen','Membeli pulpen','Menulis dengan pulpen','Membaca pulpen'],a:2,f:'で menunjukkan alat'},{q:'大きい → Lawan katanya?',o:['高い','小さい','長い','暗い'],a:1,f:'大きい lawannya 小さい'},{q:'先生 → Artinya?',o:['Murid','Dokter','Guru','Karyawan'],a:2,f:'先生 = Sensei'},{q:'日本人 → Artinya?',o:['Orang China','Orang Jepang','Orang Korea','Orang Indonesia'],a:1,f:'日本 + 人 = Orang Jepang'}],
+SMA:[{q:'買う → Te-form?',o:['買いて','買って','買いで','買むて'],a:1,f:'Verb u → って'},{q:'書く → Te-form?',o:['書いて','書って','書んで','書すて'],a:0,f:'Verb ku → いて'},{q:'食べません → Artinya?',o:['Tidak makan','Makan','Tidak mau makan','Sudah makan'],a:0,f:'ません = negatif'},{q:'学生でした → Artinya?',o:['Adalah murid','Bukan murid','Dulu adalah murid','Akan jadi murid'],a:2,f:'でした = lampau'},{q:'静かじゃない → Artinya?',o:['Tidak tenang','Tenang','Sangat tenang','Kurang tenang'],a:0,f:'じゃない = negatif na-adj'},{q:'~てください artinya?',o:['Jangan','Silakan','Boleh','Harus'],a:1,f:'てください = permintaan sopan'},{q:'~ている artinya?',o:['Sudah','Akan','Sedang','Baru'],a:2,f:'ている = sedang melakukan'},{q:'暑かったです → Artinya?',o:['Panas','Tidak panas','Dulu panas','Akan panas'],a:2,f:'かった = lampau i-adj'},{q:'勉強する → Te-form?',o:['勉強して','勉強すて','勉強きて','勉強んて'],a:0,f:'する → して (irregular)'},{q:'来ます → Te-form?',o:['来して','来いて','来て','来って'],a:2,f:'くる → きて (irregular)'}]};
 
-          <!-- Results Area -->
-          <div id="resultsArea" class="hidden space-y-4 pb-4">
-            <!-- Main Result -->
-            <div id="mainResult" class="glass-strong rounded-2xl p-5 animate-fade-up gradient-border">
-              <div class="flex items-start justify-between gap-3 mb-4">
-                <div>
-                  <h2 id="resKata" class="text-3xl font-jp font-bold text-white mb-1"></h2>
-                  <p id="resArti" class="text-neon font-logo font-semibold text-base"></p>
-                </div>
-                <button id="speakKataBtn" class="speak-btn" aria-label="Ucapkan kata">
-                  <i class="fas fa-volume-up text-sm"></i>
-                </button>
-              </div>
-              <div class="flex flex-wrap gap-2 mb-4">
-                <span id="resRomaji" class="tag bg-white/5 text-slate-300 border border-white/8"></span>
-                <span id="resHiragana" class="tag bg-neon/10 text-neon border border-neon/20"></span>
-                <span id="resKanji" class="tag bg-violet/10 text-violet border border-violet/20"></span>
-              </div>
-              <button id="favBtn" class="flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 bg-white/5 text-slate-300 text-sm hover:border-violet/30 hover:text-violet hover:bg-violet/5 transition-all">
-                <i class="far fa-heart"></i>
-                <span>Simpan ke Favorit</span>
-              </button>
-            </div>
+var fbOk=false,onLine=navigator.onLine,curUser=null;
+var ud={name:'',score:0,progress:0,level:'SD',done:0,streak:1,lastDay:''};
+var curLv='SD',qz={i:0,s:0,qs:[],done:false};
+var chatHist=[],oaiKey=localStorage.getItem('jg_oak')||'',acts=[];
+var donAmt=5000,_db=null,_auth=null,_ns=false;
 
-            <!-- Contoh Percakapan -->
-            <div id="contohSection" class="glass rounded-2xl p-5 animate-fade-up" style="animation-delay:0.1s">
-              <div class="flex items-center gap-2 mb-4">
-                <div class="w-8 h-8 rounded-lg bg-neon/15 flex items-center justify-center">
-                  <i class="fas fa-comments text-neon text-xs"></i>
-                </div>
-                <h3 class="font-logo font-bold text-sm text-white">Contoh Percakapan</h3>
-              </div>
-              <div id="contohArea" class="space-y-3"></div>
-            </div>
+function pN(s,t){if(_ns)return;try{history.pushState({s:s,t:t||''},'');}catch(e){}}
+function gT(){var a=document.querySelector('.ni.on');return a?a.dataset.t:'home';}
+function sTS(t){var m={home:'tabHome',learn:'tabLearn',quiz:'tabQuiz',chat:'tabChat',leaderboard:'tabLeaderboard',profile:'tabProfile'};document.querySelectorAll('.tc').forEach(function(c){c.classList.remove('on');});document.getElementById(m[t]).classList.add('on');document.querySelectorAll('.ni').forEach(function(n){n.classList.toggle('on',n.dataset.t===t);});if(t==='home')updHome();if(t==='learn'){curLv=ud.level;updLvBtns();renderMats();hideDet();}if(t==='leaderboard')loadLB();if(t==='quiz'){document.getElementById('quizArea').style.display='block';document.getElementById('quizPlay').style.display='none';}}
 
-            <!-- Penjelasan -->
-            <div id="penjelasanSection" class="glass rounded-2xl p-5 animate-fade-up" style="animation-delay:0.15s">
-              <div class="flex items-center gap-2 mb-3">
-                <div class="w-8 h-8 rounded-lg bg-violet/15 flex items-center justify-center">
-                  <i class="fas fa-brain text-violet text-xs"></i>
-                </div>
-                <h3 class="font-logo font-bold text-sm text-white">Penjelasan AI</h3>
-              </div>
-              <p id="penjelasanText" class="text-sm text-slate-300 leading-relaxed"></p>
-            </div>
-
-            <!-- Quiz -->
-            <div id="quizSection" class="glass rounded-2xl p-5 animate-fade-up" style="animation-delay:0.2s">
-              <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center gap-2">
-                  <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-neon/20 to-violet/20 flex items-center justify-center">
-                    <i class="fas fa-question text-neon text-xs"></i>
-                  </div>
-                  <h3 class="font-logo font-bold text-sm text-white">Quiz</h3>
-                </div>
-                <button id="quizNewBtn" class="hidden text-xs text-neon/70 hover:text-neon transition-colors font-logo">
-                  <i class="fas fa-redo mr-1"></i>Baru
-                </button>
-              </div>
-              <p id="quizPertanyaan" class="text-sm text-slate-200 font-medium mb-4 leading-relaxed"></p>
-              <div id="quizOpsi" class="space-y-2"></div>
-              <p id="quizResult" class="hidden mt-3 text-sm font-bold text-center py-2 rounded-xl"></p>
-            </div>
-
-            <!-- Error -->
-            <div id="errorArea" class="hidden glass rounded-2xl p-5 text-center">
-              <div class="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center mx-auto mb-3">
-                <i class="fas fa-exclamation-triangle text-red-400 text-xl"></i>
-              </div>
-              <p id="errorText" class="text-sm text-red-300 mb-4"></p>
-              <button id="retryBtn" class="px-5 py-2 rounded-xl border border-white/10 bg-white/5 text-sm text-slate-300 hover:bg-white/10 transition-colors">
-                <i class="fas fa-redo mr-2"></i>Coba Lagi
-              </button>
-            </div>
-          </div>
-
-          <!-- Empty State -->
-          <div id="emptyState" class="text-center py-16 animate-fade-up" style="animation-delay:0.2s">
-            <div class="text-6xl mb-4 opacity-20 animate-float"><i class="fas fa-language"></i></div>
-            <p class="text-slate-500 text-sm">Ketik kata dalam bahasa Indonesia, Jepang, atau Romaji untuk mulai mencari</p>
-          </div>
-        </div>
-
-        <!-- ===== FAVORITES TAB ===== -->
-        <div id="favTab" class="tab-content hidden">
-          <div class="flex items-center justify-between mb-5 pt-2">
-            <div>
-              <h2 class="font-logo font-bold text-xl text-white">Favorit</h2>
-              <p id="favCount" class="text-xs text-slate-500 mt-1">0 kata tersimpan</p>
-            </div>
-            <button id="clearFavBtn" class="hidden text-xs text-red-400/70 hover:text-red-400 transition-colors font-logo">
-              <i class="fas fa-trash mr-1"></i>Hapus Semua
-            </button>
-          </div>
-          <div id="favList" class="space-y-2"></div>
-          <div id="favEmpty" class="text-center py-16">
-            <div class="text-5xl mb-4 opacity-15"><i class="far fa-heart"></i></div>
-            <p class="text-slate-500 text-sm">Belum ada kata favorit</p>
-            <p class="text-slate-600 text-xs mt-1">Cari kata lalu simpan ke favorit</p>
-          </div>
-        </div>
-
-        <!-- ===== DONATE TAB ===== -->
-        <div id="donateTab" class="tab-content hidden">
-          <div class="pt-2 mb-5">
-            <h2 class="font-logo font-bold text-xl text-white">Donasi</h2>
-            <p class="text-xs text-slate-500 mt-1">Dukung pengembangan aplikasi ini</p>
-          </div>
-          <div class="glass-strong rounded-2xl p-6 text-center glow-violet animate-fade-up">
-            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-violet/20 flex items-center justify-center mx-auto mb-4">
-              <i class="fas fa-hand-holding-heart text-2xl text-violet"></i>
-            </div>
-            <h3 class="font-logo font-bold text-lg text-white mb-1">Donasi via DANA</h3>
-            <p class="text-xs text-slate-400 mb-5">Setiap donasi sangat berarti untuk kelangsungan aplikasi ini</p>
-            <div class="inline-block p-3 bg-white rounded-2xl mb-5">
-              <img id="qrCode" src="https://api.qrserver.com/v1/create-qr-code/?data=https%3A%2F%2Flink.dana.id%2Fminta%3Ffull_url%3D%26phone%3D081321592990&size=180x180&color=1a1a2e" alt="QR DANA" class="w-44 h-44" loading="lazy">
-            </div>
-            <div class="flex items-center justify-center gap-2 mb-5 p-3 rounded-xl bg-white/5 border border-white/8">
-              <i class="fas fa-phone text-neon/60 text-xs"></i>
-              <span class="font-mono text-lg text-white tracking-wider">081321592990</span>
-              <button id="copyNumBtn" class="ml-2 w-8 h-8 rounded-lg bg-neon/10 flex items-center justify-center text-neon hover:bg-neon/20 transition-colors" aria-label="Salin nomor">
-                <i class="far fa-copy text-xs"></i>
-              </button>
-            </div>
-            <div class="space-y-2">
-              <a id="danaLink" href="https://link.dana.id/minta?full_url=&phone=081321592990" target="_blank" rel="noopener noreferrer"
-                class="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-logo font-bold text-sm hover:opacity-90 transition-opacity no-underline">
-                <i class="fas fa-wallet"></i>
-                Buka DANA
-              </a>
-              <p class="text-[10px] text-slate-600">Aplikasi DANA akan terbuka otomatis</p>
-            </div>
-          </div>
-          <div class="glass rounded-2xl p-5 mt-4 animate-fade-up" style="animation-delay:0.1s">
-            <h4 class="font-logo font-bold text-sm text-white mb-3">Kenapa Donasi?</h4>
-            <div class="space-y-3">
-              <div class="flex items-start gap-3">
-                <div class="w-6 h-6 rounded-md bg-neon/10 flex items-center justify-center flex-shrink-0 mt-0.5"><i class="fas fa-server text-neon text-[10px]"></i></div>
-                <div>
-                  <p class="text-xs text-slate-300 font-medium">Biaya Server AI</p>
-                  <p class="text-[11px] text-slate-500">Setiap pencarian menggunakan API AI berbayar</p>
-                </div>
-              </div>
-              <div class="flex items-start gap-3">
-                <div class="w-6 h-6 rounded-md bg-violet/10 flex items-center justify-center flex-shrink-0 mt-0.5"><i class="fas fa-code text-violet text-[10px]"></i></div>
-                <div>
-                  <p class="text-xs text-slate-300 font-medium">Pengembangan Fitur</p>
-                  <p class="text-[11px] text-slate-500">Fitur baru seperti handwriting recognition, grammar check, dll</p>
-                </div>
-              </div>
-              <div class="flex items-start gap-3">
-                <div class="w-6 h-6 rounded-md bg-emerald-500/10 flex items-center justify-center flex-shrink-0 mt-0.5"><i class="fas fa-shield-alt text-emerald-400 text-[10px]"></i></div>
-                <div>
-                  <p class="text-xs text-slate-300 font-medium">Gratis Selamanya</p>
-                  <p class="text-[11px] text-slate-500">Donasi opsional, aplikasi tetap gratis untuk semua pengguna</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Bottom Navigation -->
-    <nav class="bottom-nav glass" style="border-top:1px solid rgba(255,255,255,0.06)">
-      <div class="max-w-lg mx-auto flex items-center justify-around">
-        <button class="nav-btn active" data-tab="searchTab" aria-label="Cari">
-          <i class="fas fa-search"></i><span>Cari</span>
-        </button>
-        <button class="nav-btn" data-tab="favTab" aria-label="Favorit">
-          <i class="fas fa-heart"></i><span>Favorit</span>
-        </button>
-        <button class="nav-btn" data-tab="donateTab" aria-label="Donasi">
-          <i class="fas fa-hand-holding-heart"></i><span>Donasi</span>
-        </button>
-      </div>
-    </nav>
-  </section>
-
-  <!-- Toast Container -->
-  <div id="toastContainer" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center gap-2 pointer-events-none"></div>
-
-  <!-- ======== MAIN SCRIPT ======== -->
-  <script type="module">
-    // ==========================================
-    // FIREBASE IMPORTS & CONFIG
-    // ==========================================
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBAAqRc86lTdgeNcyi8y38iPM_kQ2MlV8I",
-      authDomain: "smart-ai-afc4a.firebaseapp.com",
-      databaseURL: "https://smart-ai-afc4a-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "smart-ai-afc4a",
-      storageBucket: "smart-ai-afc4a.firebasestorage.app",
-      messagingSenderId: "201179853408",
-      appId: "1:201179853408:web:2d67e63af3de7731198905",
-      measurementId: "G-MHWF23GKEC"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
-
-    // ==========================================
-    // KONFIGURASI API Z.AI
-    // ==========================================
-    const ZAI_API_URL = "https://z.ai/v1/chat/completions";
-    const ZAI_API_KEY = "japanese_dic";
-    const ZAI_MODEL = "gpt-4.1-mini";
-
-    // ==========================================
-    // STATE
-    // ==========================================
-    let currentResult = null;
-    let lastQuery = '';
-    let favorites = JSON.parse(localStorage.getItem('jpdict_favs') || '[]');
-
-    // ==========================================
-    // DOM HELPERS
-    // ==========================================
-    const $ = (s) => document.querySelector(s);
-    const $$ = (s) => document.querySelectorAll(s);
-
-    const loginPage   = $('#loginPage');
-    const dashboard   = $('#dashboard');
-    const searchInput = $('#searchInput');
-    const searchBtn   = $('#searchBtn');
-    const skeletonArea = $('#skeletonArea');
-    const resultsArea  = $('#resultsArea');
-    const emptyState   = $('#emptyState');
-    const errorArea    = $('#errorArea');
-    const suggestions  = $('#suggestions');
-
-    // ==========================================
-    // TOAST NOTIFICATION
-    // ==========================================
-    function showToast(msg, type = 'info') {
-      const c = $('#toastContainer');
-      const t = document.createElement('div');
-      t.className = `toast toast-${type}`;
-      const icons = { success: 'fa-check-circle', error: 'fa-times-circle', info: 'fa-info-circle' };
-      t.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i><span>${msg}</span>`;
-      c.appendChild(t);
-      setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 300); }, 2500);
+(function(){
+try{var s=localStorage.getItem('jg_u');if(s)ud=JSON.parse(s);}catch(e){}
+if(localStorage.getItem('jg_th')==='light')document.body.classList.add('light');
+updThIco();chkStreak();initFB();
+if(localStorage.getItem('jg_dc'))document.getElementById('donBanner').style.display='none';
+window.addEventListener('online',function(){onLine=true;document.getElementById('offBan').classList.remove('sh');toast('Koneksi kembali','ok');});
+window.addEventListener('offline',function(){onLine=false;document.getElementById('offBan').classList.add('sh');});
+if(window.speechSynthesis){speechSynthesis.onvoiceschanged=function(){speechSynthesis.getVoices();};speechSynthesis.getVoices();}
+window.addEventListener('popstate',function(e){
+    if(_ns)return;
+    if(document.getElementById('modalOv').classList.contains('sh')){closeModal();_ns=true;try{history.pushState({s:'mainA',t:gT()},'');}catch(ex){}_ns=false;return;}
+    if(document.getElementById('matDetail').classList.contains('on')){hideDet();_ns=true;try{history.pushState({s:'mainA',t:'learn'},'');}catch(ex){}_ns=false;return;}
+    if(document.getElementById('quizPlay').style.display==='block'){document.getElementById('quizPlay').style.display='none';document.getElementById('quizArea').style.display='block';_ns=true;try{history.pushState({s:'mainA',t:'quiz'},'');}catch(ex){}_ns=false;return;}
+    _ns=true;
+    if(e.state){
+        if(e.state.s==='logS')showScr('logS');
+        else if(e.state.s==='mainA'&&e.state.t)sTS(e.state.t);
+    }else{
+        if(curUser&&fbOk){sTS('home');try{history.pushState({s:'mainA',t:'home'},'');}catch(ex){}}
+        else showScr('logS');
     }
+    _ns=false;
+});
+try{history.replaceState({s:'logS',t:''},'');}catch(e){}
+})();
 
-    // ==========================================
-    // AUTH: GOOGLE LOGIN
-    // ==========================================
-    $('#googleLoginBtn').addEventListener('click', async () => {
-      try {
-        await signInWithPopup(auth, provider);
-      } catch (err) {
-        if (err.code !== 'auth/popup-closed-by-user') {
-          showToast('Gagal masuk. Coba lagi.', 'error');
-        }
-      }
-    });
+function initFB(){try{firebase.initializeApp(FBC);_auth=firebase.auth();_db=firebase.firestore();fbOk=true;_auth.onAuthStateChanged(function(u){if(u){curUser=u;loadUD(u.uid);enterApp();}});}catch(e){console.error('Firebase init error:',e);showFbErr('Gagal menghubungkan Firebase: '+e.message);}}
+function showFbErr(msg){var el=document.getElementById('fbErr');el.innerHTML='<i class="fas fa-exclamation-triangle"></i> '+msg;el.classList.add('sh');}
 
-    $('#logoutBtn').addEventListener('click', async () => {
-      try {
-        await signOut(auth);
-        showToast('Berhasil keluar', 'info');
-      } catch { showToast('Gagal keluar', 'error'); }
-    });
+function googleLogin(){if(!fbOk||!_auth){toast('Firebase belum siap. Gunakan mode tamu.','er');return;}showLoad('Menghubungkan ke Google...');pN('logS','');_auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).then(function(r){hideLoad();curUser=r.user;ud.name=r.user.displayName||'Pengguna';saveUD(r.user.uid);enterApp();toast('Selamat datang, '+ud.name+'!','ok');}).catch(function(e){hideLoad();var msg=e.message||'Unknown error';if(e.code==='auth/popup-closed-by-user')msg='Popup ditutup. Coba lagi.';if(e.code==='auth/unauthorized-domain')msg='Domain belum diizinkan. Tambahkan di Firebase Console → Authentication → Authorized domains.';showFbErr(msg);toast('Login gagal','er');});}
+function guestLogin(){pN('logS','');ud.name=ud.name||'Tamu';saveLocal();enterApp();toast('Mode tamu aktif','inf');click();}
+function doLogout(){showModal('Keluar','Apakah kamu yakin ingin keluar?',function(){if(fbOk&&_auth)_auth.signOut();curUser=null;showScr('logS');closeModal();toast('Berhasil keluar','inf');});}
 
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        $('#userName').textContent = user.displayName || 'User';
-        $('#userAvatar').src = user.photoURL || 'https://picsum.photos/seed/avatar/100/100.jpg';
-        loginPage.classList.add('hidden');
-        dashboard.classList.remove('hidden');
-      } else {
-        dashboard.classList.add('hidden');
-        loginPage.classList.remove('hidden');
-      }
-    });
+function saveUD(uid){saveLocal();if(!fbOk||!_db)return;try{_db.collection('users').doc(uid).set({name:ud.name,score:ud.score,progress:ud.progress,level:ud.level,done:ud.done,streak:ud.streak,lastDay:ud.lastDay},{merge:true});_db.collection('leaderboard').doc(uid).set({name:ud.name,score:ud.score},{merge:true});}catch(e){}}
+function loadUD(uid){if(!fbOk||!_db)return;_db.collection('users').doc(uid).get().then(function(d){if(d.exists){var x=d.data();ud.name=x.name||ud.name;ud.score=x.score||0;ud.progress=x.progress||0;ud.level=x.level||'SD';ud.done=x.done||0;ud.streak=x.streak||1;ud.lastDay=x.lastDay||'';saveLocal();updHome();}}).catch(function(){});}
+function saveLocal(){try{localStorage.setItem('jg_u',JSON.stringify(ud));}catch(e){}}
+function chkStreak(){var t=new Date().toDateString();if(ud.lastDay!==t){var y=new Date(Date.now()-86400000).toDateString();ud.streak=(ud.lastDay===y)?(ud.streak||0)+1:1;ud.lastDay=t;saveLocal();}}
+function resetProgress(){showModal('Reset Progress','Semua skor dan progress akan dihapus. Lanjutkan?',function(){ud.score=0;ud.progress=0;ud.done=0;ud.streak=1;acts=[];saveLocal();if(curUser)saveUD(curUser.uid);updHome();closeModal();toast('Progress direset','ok');});}
 
-    // ==========================================
-    // BOTTOM NAVIGATION
-    // ==========================================
-    $$('.nav-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        $$('.nav-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        $$('.tab-content').forEach(t => t.classList.add('hidden'));
-        $(`#${btn.dataset.tab}`).classList.remove('hidden');
-        document.querySelector('.app-scroll').scrollTop = 0;
-        if (btn.dataset.tab === 'favTab') renderFavorites();
-      });
-    });
+function showScr(id){document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});document.getElementById(id).classList.add('on');}
+function switchTab(t){sTS(t);pN('mainA',t);click();}
+function enterApp(){showScr('mainA');updHome();pN('mainA','home');}
 
-    // ==========================================
-    // SPEECH: WEB SPEECH API
-    // ==========================================
-    if (speechSynthesis.onvoiceschanged !== undefined) {
-      speechSynthesis.onvoiceschanged = () => {};
-    }
+function updHome(){document.getElementById('welName').textContent='Halo, '+ud.name+'!';document.getElementById('hScore').textContent=ud.score;document.getElementById('hLevel').textContent=ud.level;document.getElementById('hDone').textContent=ud.done;var p=Math.min(100,Math.round(ud.progress));document.getElementById('hPct').textContent=p+'%';document.getElementById('hPfill').style.width=p+'%';document.getElementById('streakNum').textContent=ud.streak||1;var ini=ud.name?ud.name.charAt(0).toUpperCase():'?';document.getElementById('userAv').textContent=ini;document.getElementById('pAvatar').textContent=ini;document.getElementById('pName').textContent=ud.name||'Pengguna';document.getElementById('pEmail').textContent=curUser?curUser.email:'Mode Tamu';var al=document.getElementById('activityLog');if(!acts.length)al.innerHTML='<p style="color:var(--t3);font-size:13px;text-align:center;padding:10px">Belum ada aktivitas</p>';else al.innerHTML=acts.slice(-5).reverse().map(function(a){return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--gb)"><i class="'+a.ic+'" style="color:var(--nb);width:20px;text-align:center"></i><span style="flex:1;font-size:13px">'+a.tx+'</span><span style="font-size:10px;color:var(--t3)">'+a.tm+'</span></div>';}).join('');if(!onLine)document.getElementById('offBan').classList.add('sh');else document.getElementById('offBan').classList.remove('sh');}
+function addAct(ic,tx){var n=new Date();acts.push({ic:ic,tx:tx,tm:String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')});if(acts.length>20)acts.shift();}
 
-    function speak(text) {
-      if (!text) return;
-      speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'ja-JP';
-      u.rate = 0.85;
-      const voices = speechSynthesis.getVoices();
-      const jpVoice = voices.find(v => v.lang.startsWith('ja'));
-      if (jpVoice) u.voice = jpVoice;
+function closeDonBanner(){document.getElementById('donBanner').style.display='none';localStorage.setItem('jg_dc','1');}
+function openDonasi(){var fmt=DANA_NUM.replace(/(\d{4})(?=\d)/g,'$1-');document.getElementById('modContent').innerHTML='<div class="don-card"><div class="don-logo">D</div><h3 style="font-family:Orbitron,sans-serif;font-size:20px;font-weight:900;background:linear-gradient(135deg,#108ee9,#0068b5);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Donasi via DANA</h3><p style="color:var(--t2);font-size:13px;margin-bottom:24px">Dukung pengembangan JapaneseGo AI agar tetap gratis</p><div style="font-size:12px;color:var(--t2);font-weight:600;margin-bottom:8px;text-align:left">Pilih nominal:</div><div class="don-amt"><button class="don-amt-btn on" onclick="pickDon(this,5000)">5.000</button><button class="don-amt-btn" onclick="pickDon(this,10000)">10.000</button><button class="don-amt-btn" onclick="pickDon(this,20000)">20.000</button><button class="don-amt-btn" onclick="pickDon(this,50000)">50.000</button><button class="don-amt-btn" onclick="pickDon(this,100000)">100.000</button><button class="don-amt-btn" onclick="pickDon(this,-1)">Lainnya</button></div><div id="donCustBox" style="display:none;margin-bottom:20px"><input type="number" id="donCustVal" placeholder="Masukkan nominal..." min="1000" style="width:100%;padding:12px 16px;background:var(--glass);border:1px solid var(--gb);border-radius:var(--rx);color:var(--t1);font-size:14px;outline:none;font-family:Inter,sans-serif"></div><div class="don-dana-info"><div class="dlbl">Transfer ke DANA</div><div class="dval">'+fmt+'</div><div class="dnm">a.n. '+DANA_NM+'</div></div><button class="don-pay-btn" onclick="doDon()"><i class="fas fa-paper-plane"></i> Buka DANA untuk Donasi</button><p class="don-note">Donasi bersifat sukarela. Semua fitur tetap gratis. Terima kasih!</p></div>';donAmt=5000;document.getElementById('modalOv').classList.add('sh');}
+function pickDon(el,v){document.querySelectorAll('.don-amt-btn').forEach(function(b){b.classList.remove('on');});el.classList.add('on');donAmt=v;var cb=document.getElementById('donCustBox');if(v===-1){cb.style.display='block';setTimeout(function(){document.getElementById('donCustVal').focus();},100);}else{cb.style.display='none';}}
+function doDon(){var amt=donAmt;if(amt===-1){var cv=document.getElementById('donCustVal').value;if(!cv||parseInt(cv)<1000){toast('Nominal minimal Rp1.000','er');return;}amt=parseInt(cv);}var f=amt.toLocaleString('id-ID');var wa=DANA_NUM.startsWith('0')?'62'+DANA_NUM.substring(1):DANA_NUM;window.open('https://wa.me/'+wa+'?text='+encodeURIComponent('Halo, saya ingin berdonasi Rp'+f+' untuk JapaneseGo AI. Terima kasih!'),'_blank');toast('Membuka WhatsApp...','inf');closeModal();}
 
-      const btn = $('#speakKataBtn');
-      if (btn) btn.classList.add('speaking');
-      u.onend = () => { if (btn) btn.classList.remove('speaking'); };
-      u.onerror = () => { if (btn) btn.classList.remove('speaking'); };
-      speechSynthesis.speak(u);
-    }
+function selectLevel(lv){curLv=lv;ud.level=lv;saveLocal();if(curUser)saveUD(curUser.uid);updLvBtns();renderMats();hideDet();click();}
+function updLvBtns(){document.querySelectorAll('.lbtn').forEach(function(b){b.classList.toggle('on',b.dataset.lv===curLv);});}
+function renderMats(){var el=document.getElementById('matList'),ms=MAT[curLv]||[],h='';for(var i=0;i<ms.length;i++){var m=ms[i];h+='<div class="mcard" onclick="openMat(\''+m.id+'\')"><div class="mico" style="background:'+m.bg+'">'+m.icon+'</div><div class="minfo"><h4>'+m.title+'</h4><p>'+m.desc+'</p></div><div class="marr"><i class="fas fa-chevron-right"></i></div></div>';}el.innerHTML=h;}
+function openMat(id){var ms=MAT[curLv]||[],m=null;for(var i=0;i<ms.length;i++){if(ms[i].id===id){m=ms[i];break;}}if(!m)return;document.getElementById('matList').style.display='none';document.getElementById('levelSel').style.display='none';document.getElementById('learnTit').style.display='none';var d=document.getElementById('matDetail');d.classList.add('on');d.innerHTML=buildMat(m);click();}
+function hideDet(){document.getElementById('matList').style.display='block';document.getElementById('levelSel').style.display='grid';document.getElementById('learnTit').style.display='flex';var d=document.getElementById('matDetail');d.classList.remove('on');d.innerHTML='';}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function buildMat(m){var c=m.c,h='<button class="bkb" onclick="hideDet()"><i class="fas fa-arrow-left"></i> Kembali</button><div class="dt">'+m.title+'</div><div class="dsub">'+m.desc+'</div>';if(c.chars){var sc=c.chars.slice(0,10).map(function(x){return x[0];}).join('');h+='<button class="abtn" onclick="speak(\''+esc(sc)+'\')"><i class="fas fa-volume-high"></i></button><div class="kgrid">';for(var i=0;i<c.chars.length;i++)h+='<div class="kitem" onclick="speak(\''+esc(c.chars[i][0])+'\')"><div class="ch">'+c.chars[i][0]+'</div><div class="rm">'+c.chars[i][1]+'</div></div>';h+='</div>';if(c.ex)for(var i=0;i<c.ex.length;i++)h+='<div class="ebox ck" onclick="speak(\''+esc(c.ex[i].jp)+'\')"><div class="jp">'+c.ex[i].jp+' <i class="fas fa-volume-high" style="font-size:12px;color:var(--nb)"></i></div><div class="ro">'+c.ex[i].ro+'</div><div class="id">'+c.ex[i].id+'</div></div>';}if(c.words)for(var i=0;i<c.words.length;i++)h+='<div class="ebox ck" onclick="speak(\''+esc(c.words[i].jp)+'\')"><div class="jp">'+c.words[i].jp+' <i class="fas fa-volume-high" style="font-size:12px;color:var(--nb)"></i></div><div class="ro">'+c.words[i].ro+'</div><div class="id">'+c.words[i].id+'</div></div>';if(c.greet)for(var i=0;i<c.greet.length;i++)h+='<div class="ebox ck" onclick="speak(\''+esc(c.greet[i].jp)+'\')"><div class="jp">'+c.greet[i].jp+' <i class="fas fa-volume-high" style="font-size:12px;color:var(--nb)"></i></div><div class="ro">'+c.greet[i].ro+'</div><div class="id">'+c.greet[i].id+'</div></div>';if(c.particles)for(var i=0;i<c.particles.length;i++)h+='<div class="ebox"><div class="jp" style="font-size:18px">'+c.particles[i].p+'</div><div class="ro" style="color:var(--nc);font-weight:600">'+c.particles[i].fn+'</div><div class="id">'+c.particles[i].ex+'</div></div>';if(c.patterns)for(var i=0;i<c.patterns.length;i++)h+='<div class="ebox"><div class="jp" style="font-size:16px">'+c.patterns[i].t+'</div><div class="ro">'+c.patterns[i].d+'</div><div class="id">'+c.patterns[i].ex+'</div></div>';if(c.kanji)for(var i=0;i<c.kanji.length;i++)h+='<div class="ebox ck" onclick="speak(\''+esc(c.kanji[i].k)+'\')"><div class="jp" style="font-size:32px">'+c.kanji[i].k+'</div><div class="ro">On: '+c.kanji[i].on+' | Kun: '+c.kanji[i].kun+'</div><div class="id">'+c.kanji[i].mn+' — '+c.kanji[i].ex+'</div></div>';if(c.rules){h+='<p style="color:var(--t2);font-size:12px;margin-bottom:12px;font-weight:600">Aturan Perubahan:</p>';for(var i=0;i<c.rules.length;i++)h+='<div class="ebox"><div class="jp">'+c.rules[i].r+'</div><div class="ro">'+c.rules[i].ex+'</div><div class="id">'+c.rules[i].mn+'</div></div>';if(c.use){h+='<p style="color:var(--t2);font-size:12px;margin:16px 0 12px;font-weight:600">Penggunaan Te-form:</p>';for(var i=0;i<c.use.length;i++)h+='<div class="ebox ck" onclick="speak(\''+esc(c.use[i].ex.split('\u3002')[0])+'\')"><div class="jp" style="font-size:14px">'+c.use[i].p+'</div><div class="id">'+c.use[i].ex+'</div></div>';}}if(c.past){h+='<p style="color:var(--nc);font-size:13px;font-weight:700;margin-bottom:12px">Bentuk Lampau</p>';for(var i=0;i<c.past.length;i++)h+='<div class="ebox"><div class="jp">'+c.past[i].r+'</div><div class="id">'+c.past[i].ex+'</div></div>';}if(c.neg){h+='<p style="color:var(--nk);font-size:13px;font-weight:700;margin:16px 0 12px">Bentuk Negatif</p>';for(var i=0;i<c.neg.length;i++)h+='<div class="ebox"><div class="jp">'+c.neg[i].r+'</div><div class="id">'+c.neg[i].ex+'</div></div>';}if(c.dialogs)for(var d=0;d<c.dialogs.length;d++){h+='<div style="margin-bottom:16px"><div class="jp" style="font-size:14px;text-align:left;padding:12px 16px;margin-bottom:8px">'+c.dialogs[d].title+'</div>';for(var i=0;i<c.dialogs[d].lines.length;i++){var ln=c.dialogs[d].lines[i];h+='<div class="ebox ck" onclick="speak(\''+esc(ln.jp.replace(/\u3002/g,''))+'\')"><div style="font-size:10px;color:var(--nc);font-weight:700;margin-bottom:4px">'+ln.sp+'</div><div class="jp" style="font-size:14px">'+ln.jp+' <i class="fas fa-volume-high" style="font-size:11px;color:var(--nb)"></i></div><div class="id">'+ln.id+'</div></div>';}h+='</div>';}if(c.texts)for(var i=0;i<c.texts.length;i++)h+='<div class="jtxt">'+c.texts[i].text+'</div><div class="ebox"><div class="ro" style="margin-bottom:6px">'+c.texts[i].reading+'</div><div class="id">'+c.texts[i].meaning+'</div></div>';h+='<button class="btn bp bb" style="margin-top:20px" onclick="compMat(\''+esc(m.id)+'\')"><i class="fas fa-check"></i> Selesai & Tambah Progress</button>';return h;}
+function compMat(id){ud.score+=10;ud.done=(ud.done||0)+1;ud.progress=Math.min(100,ud.done*5);saveLocal();if(curUser)saveUD(curUser.uid);addAct('fas fa-check-circle','Menyelesaikan: '+id+' (+10)');toast('Progress ditambahkan! +10 poin','ok');click();hideDet();}
 
-    $('#speakKataBtn').addEventListener('click', () => {
-      if (currentResult) speak(currentResult.kata);
-    });
+function speak(t){if(!t||!window.speechSynthesis)return;try{window.speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.lang='ja-JP';u.rate=0.8;var v=speechSynthesis.getVoices();for(var i=0;i<v.length;i++){if(v[i].lang.indexOf('ja')===0){u.voice=v[i];break;}}speechSynthesis.speak(u);}catch(e){}}
 
-    // ==========================================
-    // SEARCH: Z.AI API
-    // ==========================================
-    async function searchWord(query) {
-      if (!query.trim()) { showToast('Masukkan kata untuk dicari', 'info'); return; }
+function startQuiz(){var qs=QZ[curLv].slice();for(var i=qs.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=qs[i];qs[i]=qs[j];qs[j]=tmp;}qz={i:0,s:0,qs:qs.slice(0,10),done:false};document.getElementById('quizArea').style.display='none';document.getElementById('quizPlay').style.display='block';renderQ();click();}
+function renderQ(){if(qz.i>=qz.qs.length){showQRes();return;}var q=qz.qs[qz.i],L=['A','B','C','D'],h='<div class="qcont"><div class="qhdr"><span class="qcnt">'+(qz.i+1)+' / '+qz.qs.length+'</span><span class="qsb"><i class="fas fa-star"></i> '+qz.s+'</span></div><div class="qq"><div class="ql">Pertanyaan</div><div class="qt">'+q.q+'</div></div><div class="qopts">';for(var i=0;i<q.o.length;i++)h+='<button class="qopt" id="qo'+i+'" onclick="ansQ('+i+')"><span class="ol">'+L[i]+'</span><span>'+q.o[i]+'</span></button>';h+='</div><div class="qfb" id="qfb"></div></div>';document.getElementById('quizPlay').innerHTML=h;qz.done=false;}
+function ansQ(idx){if(qz.done)return;qz.done=true;var q=qz.qs[qz.i],ok=idx===q.a,fb=document.getElementById('qfb');for(var i=0;i<q.o.length;i++){var el=document.getElementById('qo'+i);el.classList.add('dis');if(i===q.a)el.classList.add('cor');if(i===idx&&!ok)el.classList.add('wrg');}if(ok){qz.s+=10;fb.className='qfb sh cf';fb.innerHTML='<i class="fas fa-check-circle"></i> Benar! '+q.f;click();}else{fb.className='qfb sh wf';fb.innerHTML='<i class="fas fa-times-circle"></i> Salah. '+q.f;}setTimeout(function(){qz.i++;renderQ();},1500);}
+function showQRes(){var t=qz.qs.length*10,p=Math.round(qz.s/t*100),ic=p>=80?'\uD83C\uDF89':p>=50?'\uD83D\uDC4D':'\uD83D\uDCAA',mg=p>=80?'Luar biasa!':p>=50?'Bagus, terus belajar!':'Jangan menyerah!';ud.score+=qz.s;ud.progress=Math.min(100,ud.done*5+Math.round(p/5));saveLocal();if(curUser)saveUD(curUser.uid);addAct('fas fa-brain','Quiz: '+qz.s+'/'+t+' poin');document.getElementById('quizPlay').innerHTML='<div class="qres"><div class="ri">'+ic+'</div><h3>'+qz.s+' Poin</h3><p>'+mg+' ('+p+'%)</p><button class="btn bp" style="max-width:220px;margin:0 auto" onclick="startQuiz()"><i class="fas fa-redo"></i> Coba Lagi</button><button class="btn bs bsm" style="margin:12px auto 0;display:block" onclick="switchTab(\'home\')">Kembali ke Home</button></div>';}
 
-      lastQuery = query.trim();
+function sendChat(){var inp=document.getElementById('chatIn'),msg=inp.value.trim();if(!msg)return;inp.value='';var hint=document.getElementById('chatHint');if(hint)hint.style.display='none';addBubble('us',msg);click();if(!oaiKey){addBubble('ai','Untuk menggunakan AI Chat, set API Key OpenAI di menu Profil > Set API Key OpenAI.');return;}showTyp();chatHist.push({role:'user',content:msg});fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+oaiKey},body:JSON.stringify({model:'gpt-4o-mini',messages:[{role:'system',content:'Kamu adalah guru bahasa Jepang yang ramah dan sabar untuk siswa Indonesia. Gunakan bahasa Indonesia. Berikan contoh kalimat Jepang beserta artinya. Jawaban singkat tapi jelas.'}].concat(chatHist.slice(-10)),max_tokens:500,temperature:0.7})}).then(function(r){if(!r.ok)throw new Error('API Error '+r.status);return r.json();}).then(function(d){hideTyp();var reply=d.choices[0].message.content;chatHist.push({role:'assistant',content:reply});addBubble('ai',reply);}).catch(function(e){hideTyp();addBubble('ai','Maaf, terjadi kesalahan: '+e.message);});}
+function addBubble(type,text){var c=document.getElementById('chatMsgs'),d=document.createElement('div');d.className='chb '+type;d.innerHTML='<div class="sn">'+(type==='ai'?'Sensei AI':'Kamu')+'</div>'+text.replace(/\n/g,'<br>');c.appendChild(d);c.scrollTop=c.scrollHeight;}
+function showTyp(){var c=document.getElementById('chatMsgs'),d=document.createElement('div');d.className='chb ai';d.id='typInd';d.innerHTML='<div class="sn">Sensei AI</div><div class="chtyp"><span></span><span></span><span></span></div>';c.appendChild(d);c.scrollTop=c.scrollHeight;}
+function hideTyp(){var el=document.getElementById('typInd');if(el)el.remove();}
 
-      // Tampilkan loading
-      emptyState.classList.add('hidden');
-      resultsArea.classList.add('hidden');
-      errorArea.classList.add('hidden');
-      skeletonArea.classList.remove('hidden');
-      suggestions.classList.add('hidden');
+function loadLB(){var el=document.getElementById('lbList');if(!fbOk||!_db){el.innerHTML='<div class="cd" style="text-align:center;padding:30px"><i class="fas fa-cloud-off" style="font-size:32px;color:var(--t3);margin-bottom:12px;display:block"></i><p style="color:var(--t3);font-size:13px">Leaderboard memerlukan koneksi Firebase.</p></div>';return;}_db.collection('leaderboard').orderBy('score','desc').limit(5).get().then(function(snap){if(snap.empty){el.innerHTML='<div class="cd" style="text-align:center;padding:30px"><p style="color:var(--t3);font-size:13px">Belum ada data</p></div>';return;}var h='',idx=0;snap.forEach(function(d){idx++;var x=d.data(),rc=idx===1?'g':idx===2?'s':'b',medal=idx<=3?'<div class="lbr '+rc+'">'+idx+'</div>':'<div class="lbr" style="color:var(--t3)">'+idx+'</div>';h+='<div class="lbi">'+medal+'<div class="lba">'+((x.name||'?').charAt(0)).toUpperCase()+'</div><div class="lbinf"><div class="lbn">'+(x.name||'Anonim')+'</div></div><div class="lbsc">'+(x.score||0)+'</div></div>';});el.innerHTML=h;}).catch(function(){el.innerHTML='<div class="cd" style="text-align:center;padding:30px"><p style="color:var(--t3);font-size:13px">Gagal memuat leaderboard</p></div>';});}
 
-      try {
-        const response = await fetch(ZAI_API_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${ZAI_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: ZAI_MODEL,
-            messages: [
-              {
-                role: "system",
-                content: `Kamu adalah kamus bahasa Jepang-Indonesia yang cerdas. Saat diberi sebuah kata (bisa dalam bahasa Indonesia, Jepang, atau Romaji), kamu HARUS merespons dengan HANYA sebuah objek JSON valid (tanpa markdown, tanpa penjelasan tambahan) dengan struktur persis seperti ini:
-{
-  "kata": "kata dalam bahasa Jepang",
-  "arti": "arti dalam bahasa Indonesia",
-  "romaji": "bacaan romaji",
-  "hiragana": "bacaan hiragana",
-  "kanji": "kanji jika ada, jika tidak ada isi string kosong",
-  "contoh": [
-    {"jp": "kalimat dalam bahasa Jepang", "romaji": "bacaan romaji kalimat", "arti": "arti kalimat dalam bahasa Indonesia"}
-  ],
-  "penjelasan": "penjelasan singkat tentang kata tersebut dalam bahasa Indonesia, termasuk konteks penggunaan dan tingkat formalitas jika relevan",
-  "quiz": {
-    "pertanyaan": "pertanyaan pilihan ganda dalam bahasa Indonesia terkait kata tersebut",
-    "opsi": ["opsi A", "opsi B", "opsi C", "opsi D"],
-    "jawaban": "jawaban yang benar (harus sama persis dengan salah satu isi opsi)"
-  }
-}
-Pastikan contoh minimal 2 kalimat. Pastikan quiz memiliki 4 opsi dan hanya 1 jawaban benar. Jawaban harus identik dengan salah satu opsi.`
-              },
-              { role: "user", content: lastQuery }
-            ],
-            temperature: 0.7,
-            max_tokens: 1000
-          })
-        });
+function showModal(title,body,cb){document.getElementById('modContent').innerHTML='<h3>'+title+'</h3><p>'+body+'</p><div class="moda"><button class="btn bs bsm" onclick="closeModal()">Tutup</button>'+(cb?'<button class="btn bp bsm" id="modCfm">Ya</button>':'')+'</div>';if(cb)document.getElementById('modCfm').onclick=cb;document.getElementById('modalOv').classList.add('sh');}
+function closeModal(){document.getElementById('modalOv').classList.remove('sh');}
+function toast(msg,type){var c=document.getElementById('toastCon'),d=document.createElement('div');d.className='tst '+(type||'inf');var ic=type==='ok'?'fa-check-circle':type==='er'?'fa-circle-xmark':'fa-info-circle';d.innerHTML='<i class="fas '+ic+'"></i> '+msg;c.appendChild(d);setTimeout(function(){d.style.opacity='0';d.style.transition='opacity .3s';setTimeout(function(){d.remove();},300);},3000);}
+function showLoad(msg){document.getElementById('loadOv').classList.add('sh');document.querySelector('.lot').textContent=msg||'Memuat...';}
+function hideLoad(){document.getElementById('loadOv').classList.remove('sh');}
+function toggleTheme(){document.body.classList.toggle('light');localStorage.setItem('jg_th',document.body.classList.contains('light')?'light':'dark');updThIco();click();}
+function updThIco(){document.getElementById('themeIcon').className=document.body.classList.contains('light')?'fas fa-sun':'fas fa-moon';}
+function click(){try{var a=new(window.AudioContext||window.webkitAudioContext)();var o=a.createOscillator();var g=a.createGain();o.connect(g);g.connect(a.destination);o.frequency.value=800;g.gain.value=0.03;o.start();o.stop(a.currentTime+0.05);}catch(e){}}
 
-        if (!response.ok) {
-          const errData = await response.json().catch(() => ({}));
-          throw new Error(errData.error?.message || `HTTP ${response.status}`);
-        }
-
-        const data = await response.json();
-        let content = data.choices[0].message.content.trim();
-
-        // Bersihkan markdown code block jika ada
-        content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-
-        const result = JSON.parse(content);
-        currentResult = result;
-
-        renderResult(result);
-        skeletonArea.classList.add('hidden');
-        resultsArea.classList.remove('hidden');
-
-      } catch (err) {
-        console.error('Search error:', err);
-        skeletonArea.classList.add('hidden');
-        errorArea.classList.remove('hidden');
-
-        let msg = `Gagal memproses: ${err.message}`;
-        if (err.message.includes('401') || err.message.includes('Unauthorized')) {
-          msg = 'API key tidak valid atau sudah kadaluarsa.';
-        } else if (err.message.includes('429')) {
-          msg = 'Terlalu banyak permintaan. Coba lagi nanti.';
-        } else if (err.message.includes('JSON')) {
-          msg = 'Respons AI tidak valid. Coba lagi dengan kata lain.';
-        }
-        $('#errorText').textContent = msg;
-      }
-    }
-
-    // ==========================================
-    // RENDER HASIL
-    // ==========================================
-    function escapeHtml(str) {
-      if (!str) return '';
-      const d = document.createElement('div');
-      d.textContent = str;
-      return d.innerHTML;
-    }
-
-    function renderResult(r) {
-      $('#resKata').textContent = r.kata || '';
-      $('#resArti').textContent = r.arti || '';
-      $('#resRomaji').textContent = r.romaji ? `Romaji: ${r.romaji}` : '';
-      $('#resHiragana').textContent = r.hiragana ? `Hiragana: ${r.hiragana}` : '';
-      $('#resKanji').textContent = r.kanji ? `Kanji: ${r.kanji}` : '';
-
-      // Sembunyikan tag yang kosong
-      $('#resRomaji').style.display = r.romaji ? '' : 'none';
-      $('#resHiragana').style.display = r.hiragana ? '' : 'none';
-      $('#resKanji').style.display = r.kanji ? '' : 'none';
-
-      updateFavButton();
-
-      // Contoh percakapan
-      const contohArea = $('#contohArea');
-      contohArea.innerHTML = '';
-      if (r.contoh && r.contoh.length > 0) {
-        $('#contohSection').classList.remove('hidden');
-        r.contoh.forEach((c, i) => {
-          const card = document.createElement('div');
-          card.className = 'contoh-card animate-slide-right';
-          card.style.animationDelay = `${i * 0.08}s`;
-          card.innerHTML = `
-            <div class="flex items-start justify-between gap-2 mb-1">
-              <p class="text-sm font-jp font-medium text-white">${escapeHtml(c.jp)}</p>
-              <button class="speak-btn flex-shrink-0" style="width:30px;height:30px" data-speak-idx="${i}" aria-label="Ucapkan kalimat">
-                <i class="fas fa-volume-up text-[10px]"></i>
-              </button>
-            </div>
-            <p class="text-xs text-slate-400 mb-0.5">${escapeHtml(c.romaji)}</p>
-            <p class="text-xs text-neon/70">${escapeHtml(c.arti)}</p>
-          `;
-          card.querySelector('[data-speak-idx]').addEventListener('click', (e) => {
-            e.stopPropagation();
-            speak(r.contoh[i].jp);
-          });
-          contohArea.appendChild(card);
-        });
-      } else {
-        $('#contohSection').classList.add('hidden');
-      }
-
-      // Penjelasan
-      if (r.penjelasan) {
-        $('#penjelasanSection').classList.remove('hidden');
-        $('#penjelasanText').textContent = r.penjelasan;
-      } else {
-        $('#penjelasanSection').classList.add('hidden');
-      }
-
-      // Quiz
-      if (r.quiz) {
-        $('#quizSection').classList.remove('hidden');
-        renderQuiz(r.quiz);
-      } else {
-        $('#quizSection').classList.add('hidden');
-      }
-
-      errorArea.classList.add('hidden');
-    }
-
-    // ==========================================
-    // QUIZ
-    // ==========================================
-    function renderQuiz(quiz) {
-      $('#quizPertanyaan').textContent = quiz.pertanyaan;
-      $('#quizResult').classList.add('hidden');
-      $('#quizNewBtn').classList.add('hidden');
-
-      const labels = ['A', 'B', 'C', 'D'];
-      const area = $('#quizOpsi');
-      area.innerHTML = '';
-
-      quiz.opsi.forEach((opt) => {
-        const btn = document.createElement('button');
-        btn.className = 'quiz-opt';
-        btn.innerHTML = `<span class="opt-label">${labels[quiz.opsi.indexOf(opt)]}</span><span>${escapeHtml(opt)}</span>`;
-        btn.addEventListener('click', () => handleQuizAnswer(opt, quiz.jawaban, area));
-        area.appendChild(btn);
-      });
-    }
-
-    function handleQuizAnswer(selected, correct, container) {
-      container.querySelectorAll('.quiz-opt').forEach(btn => {
-        btn.disabled = true;
-        const text = btn.querySelector('span:last-child').textContent;
-        if (text === correct) btn.classList.add('correct');
-        else if (text === selected && selected !== correct) btn.classList.add('wrong');
-      });
-
-      const el = $('#quizResult');
-      el.classList.remove('hidden');
-      if (selected === correct) {
-        el.textContent = 'Benar! Jawaban tepat.';
-        el.className = 'mt-3 text-sm font-bold text-center py-2 rounded-xl bg-emerald-500/15 text-emerald-400';
-        showToast('Jawaban benar!', 'success');
-      } else {
-        el.textContent = `Salah. Jawaban yang benar: ${correct}`;
-        el.className = 'mt-3 text-sm font-bold text-center py-2 rounded-xl bg-red-500/15 text-red-400';
-        showToast('Jawaban salah', 'error');
-      }
-      $('#quizNewBtn').classList.remove('hidden');
-    }
-
-    $('#quizNewBtn').addEventListener('click', () => { if (lastQuery) searchWord(lastQuery); });
-    $('#retryBtn').addEventListener('click', () => { if (lastQuery) searchWord(lastQuery); });
-
-    // ==========================================
-    // FAVORIT
-    // ==========================================
-    function updateFavButton() {
-      if (!currentResult) return;
-      const isFav = favorites.some(f => f.kata === currentResult.kata);
-      const btn = $('#favBtn');
-      if (isFav) {
-        btn.innerHTML = '<i class="fas fa-heart text-violet"></i><span class="text-violet">Tersimpan</span>';
-        btn.style.borderColor = 'rgba(168,85,247,0.3)';
-        btn.style.background = 'rgba(168,85,247,0.08)';
-      } else {
-        btn.innerHTML = '<i class="far fa-heart"></i><span>Simpan ke Favorit</span>';
-        btn.style.borderColor = '';
-        btn.style.background = '';
-      }
-    }
-
-    $('#favBtn').addEventListener('click', () => {
-      if (!currentResult) return;
-      const idx = favorites.findIndex(f => f.kata === currentResult.kata);
-      if (idx >= 0) {
-        favorites.splice(idx, 1);
-        showToast('Dihapus dari favorit', 'info');
-      } else {
-        favorites.push({ ...currentResult });
-        showToast('Disimpan ke favorit', 'success');
-      }
-      localStorage.setItem('jpdict_favs', JSON.stringify(favorites));
-      updateFavButton();
-    });
-
-    function renderFavorites() {
-      const list = $('#favList');
-      const empty = $('#favEmpty');
-      const count = $('#favCount');
-      const clearBtn = $('#clearFavBtn');
-      count.textContent = `${favorites.length} kata tersimpan`;
-
-      if (favorites.length === 0) {
-        list.innerHTML = '';
-        empty.classList.remove('hidden');
-        clearBtn.classList.add('hidden');
-        return;
-      }
-
-      empty.classList.add('hidden');
-      clearBtn.classList.remove('hidden');
-      list.innerHTML = '';
-
-      favorites.forEach((fav, i) => {
-        const item = document.createElement('div');
-        item.className = 'fav-item animate-slide-right';
-        item.style.animationDelay = `${i * 0.04}s`;
-        item.innerHTML = `
-          <div class="flex-1 min-w-0">
-            <p class="font-jp font-bold text-white text-base truncate">${escapeHtml(fav.kata)}</p>
-            <p class="text-xs text-neon/70 truncate">${escapeHtml(fav.arti)}</p>
-            <p class="text-[10px] text-slate-500 truncate">${escapeHtml(fav.romaji || '')}</p>
-          </div>
-          <div class="flex items-center gap-2 flex-shrink-0 ml-2">
-            <button class="speak-btn" style="width:30px;height:30px" aria-label="Ucapkan"><i class="fas fa-volume-up text-[10px]"></i></button>
-            <button class="w-8 h-8 rounded-lg flex items-center justify-center text-red-400/60 hover:text-red-400 hover:bg-red-500/10 transition-all" aria-label="Hapus"><i class="fas fa-times text-xs"></i></button>
-          </div>
-        `;
-
-        item.querySelector('.speak-btn').addEventListener('click', (e) => {
-          e.stopPropagation(); speak(fav.kata);
-        });
-        item.querySelector('[aria-label="Hapus"]').addEventListener('click', (e) => {
-          e.stopPropagation();
-          favorites.splice(i, 1);
-          localStorage.setItem('jpdict_favs', JSON.stringify(favorites));
-          renderFavorites(); updateFavButton();
-          showToast('Dihapus dari favorit', 'info');
-        });
-        item.addEventListener('click', () => {
-          currentResult = fav;
-          renderResult(fav);
-          $$('.nav-btn').forEach(b => b.classList.remove('active'));
-          $$('.nav-btn')[0].classList.add('active');
-          $$('.tab-content').forEach(t => t.classList.add('hidden'));
-          $('#searchTab').classList.remove('hidden');
-          emptyState.classList.add('hidden');
-          resultsArea.classList.remove('hidden');
-          errorArea.classList.add('hidden');
-          suggestions.classList.add('hidden');
-          skeletonArea.classList.add('hidden');
-          document.querySelector('.app-scroll').scrollTop = 0;
-        });
-        list.appendChild(item);
-      });
-    }
-
-    $('#clearFavBtn').addEventListener('click', () => {
-      favorites = [];
-      localStorage.setItem('jpdict_favs', JSON.stringify(favorites));
-      renderFavorites(); updateFavButton();
-      showToast('Semua favorit dihapus', 'info');
-    });
-
-    // ==========================================
-    // DONASI
-    // ==========================================
-    $('#copyNumBtn').addEventListener('click', () => {
-      navigator.clipboard.writeText('081321592990').then(() => {
-        showToast('Nomor berhasil disalin', 'success');
-        const btn = $('#copyNumBtn');
-        btn.innerHTML = '<i class="fas fa-check text-xs"></i>';
-        setTimeout(() => { btn.innerHTML = '<i class="far fa-copy text-xs"></i>'; }, 1500);
-      }).catch(() => showToast('Gagal menyalin nomor', 'error'));
-    });
-
-    // ==========================================
-    // SUGGESTIONS & SEARCH EVENTS
-    // ==========================================
-    $$('.suggest-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        searchInput.value = btn.dataset.q;
-        searchWord(btn.dataset.q);
-      });
-    });
-
-    searchBtn.addEventListener('click', () => searchWord(searchInput.value));
-    searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') searchWord(searchInput.value); });
-
-    searchInput.addEventListener('focus', () => {
-      $('#searchBoxWrap').style.boxShadow = '0 0 30px rgba(0,212,255,0.15), 0 0 80px rgba(168,85,247,0.08)';
-    });
-    searchInput.addEventListener('blur', () => {
-      $('#searchBoxWrap').style.boxShadow = '';
-    });
-
-    // ==========================================
-    // PARTICLE BACKGROUND
-    // ==========================================
-    const canvas = $('#bgCanvas');
-    const ctx = canvas.getContext('2d');
-    let particles = [];
-    const PARTICLE_COUNT = 60;
-    const CONNECTION_DIST = 130;
-
-    function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-
-    class Particle {
-      constructor() { this.reset(true); }
-      reset(init) {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
-        this.vx = (Math.random() - 0.5) * 0.4;
-        this.vy = (Math.random() - 0.5) * 0.4;
-        this.r = Math.random() * 1.8 + 0.5;
-        this.isBlue = Math.random() > 0.4;
-        this.alpha = Math.random() * 0.4 + 0.15;
-      }
-      update() {
-        this.x += this.vx; this.y += this.vy;
-        if (this.x < -10 || this.x > canvas.width + 10 || this.y < -10 || this.y > canvas.height + 10) {
-          this.reset(false);
-          const side = Math.floor(Math.random() * 4);
-          if (side === 0) { this.x = -5; this.y = Math.random() * canvas.height; }
-          else if (side === 1) { this.x = canvas.width + 5; this.y = Math.random() * canvas.height; }
-          else if (side === 2) { this.y = -5; this.x = Math.random() * canvas.width; }
-          else { this.y = canvas.height + 5; this.x = Math.random() * canvas.width; }
-        }
-      }
-      draw() {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, Math.max(0.1, this.r), 0, Math.PI * 2);
-        ctx.fillStyle = this.isBlue
-          ? `rgba(0,212,255,${this.alpha})`
-          : `rgba(168,85,247,${this.alpha})`;
-        ctx.fill();
-      }
-    }
-
-    function initParticles() {
-      particles = [];
-      for (let i = 0; i < PARTICLE_COUNT; i++) particles.push(new Particle());
-    }
-
-    function drawConnections() {
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < CONNECTION_DIST) {
-            ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = `rgba(0,212,255,${(1 - dist / CONNECTION_DIST) * 0.12})`;
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
-          }
-        }
-      }
-    }
-
-    function animateParticles() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach(p => { p.update(); p.draw(); });
-      drawConnections();
-      requestAnimationFrame(animateParticles);
-    }
-
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-    initParticles();
-    if (!prefersReducedMotion) animateParticles();
-    else { particles.forEach(p => p.draw()); drawConnections(); }
-
-    // Preload voices
-    speechSynthesis.getVoices();
-    if (speechSynthesis.onvoiceschanged !== undefined) {
-      speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
-    }
-
-    console.log('%c日辞AI — Japanese Dictionary AI', 'color:#00d4ff;font-size:18px;font-weight:bold;font-family:monospace');
-  </script>
+function showApiKeyModal(){document.getElementById('modContent').innerHTML='<h3>Set API Key OpenAI</h3><p style="margin-bottom:12px">Masukkan API key untuk mengaktifkan AI Chat. Tersimpan di perangkat saja.</p><div style="position:relative;margin-bottom:16px"><input type="password" id="oakInp" placeholder="sk-..." style="width:100%;padding:14px 50px 14px 16px;background:var(--glass);border:1px solid var(--gb);border-radius:var(--rx);color:var(--t1);font-size:12px;outline:none;letter-spacing:1px;font-family:Inter,sans-serif"><button id="oakEye" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--t3);cursor:pointer;padding:4px"><i class="fas fa-eye"></i></button></div><div style="font-size:11px;color:var(--t3);line-height:1.5;margin-bottom:20px">Dapatkan key di <strong style="color:var(--nb)">platform.openai.com/api-keys</strong></div><div class="moda"><button class="btn bs bsm" onclick="closeModal()">Batal</button><button class="btn bp bsm" id="oakSave">Simpan</button></div>';document.getElementById('oakEye').onclick=function(){var inp=document.getElementById('oakInp');inp.type=inp.type==='password'?'text':'password';this.querySelector('i').className=inp.type==='password'?'fas fa-eye':'fas fa-eye-slash';};document.getElementById('oakSave').onclick=function(){var k=document.getElementById('oakInp').value.trim();if(!k){toast('Masukkan API key','er');return;}oaiKey=k;localStorage.setItem('jg_oak',k);closeModal();toast('API Key disimpan!','ok');};document.getElementById('modalOv').classList.add('sh');}
+function showAbout(){document.getElementById('modContent').innerHTML='<div style="text-align:center;margin-bottom:16px"><div style="width:60px;height:60px;margin:0 auto 12px;background:var(--gm);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#000">JG</div><div style="font-family:Orbitron,sans-serif;font-weight:900;font-size:16px;background:var(--gm);-webkit-background-clip:text;-webkit-text-fill-color:transparent">JapaneseGo AI Premium</div><div style="font-size:11px;color:var(--t3);margin-top:4px">v2.0.0 — Smart Learning Japanese</div></div><div style="font-size:12px;color:var(--t2);line-height:1.7;text-align:left"><p>Platform pembelajaran bahasa Jepang berbasis AI untuk siswa SD, SMP, SMA, dan umum. 100% gratis.</p><p style="margin-top:8px">Fitur: Materi interaktif, Quiz, AI Chat, Audio Jepang, Leaderboard, Progress tracking.</p><p style="margin-top:8px;color:var(--t3)">&copy; 2024 JapaneseGo AI. Dibuat dengan <i class="fas fa-heart" style="color:#ff4757"></i> untuk pendidikan Indonesia.</p></div><div class="moda" style="margin-top:20px"><button class="btn bs bsm" onclick="closeModal()">Tutup</button></div>';document.getElementById('modalOv').classList.add('sh');}
+</script>
 </body>
 </html>
